@@ -4,88 +4,68 @@ using UnityEngine.Rendering.Universal;
 
 public class RendererPassTest : ScriptableRenderPass
 {
-    private readonly Material m_Mat = new(Shader.Find("Hidden/URPBaseTest"));
+    private readonly Material _mat = new(Shader.Find("Hidden/URPBaseTest"));
+    private readonly ProfilingSampler _profilingSampler = new("URPTest");
+    private readonly RenderTargetHandle _tempColorTexture;
+    private Color _color;
 
-    // Profiling上显示
-    private readonly ProfilingSampler m_ProfilingSampler = new("URPTest");
-    private Color m_Color;
-
-    // 当前阶段渲染的颜色RT
-    private RenderTargetIdentifier m_Source;
-
-    // 辅助RT
-    private RenderTargetHandle m_TemporaryColorTexture;
+    public RenderTexture _dest;
+    private RenderTargetIdentifier _source;
 
     public RendererPassTest()
     {
-        // 在哪个阶段插入渲染
         renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
+        // renderPassEvent = RenderPassEvent.BeforeRenderingOpaques;
 
-        // 初始化辅助RT名字
-        m_TemporaryColorTexture.Init("URPBaseTest");
+        _tempColorTexture.Init("URPBaseTest");
     }
 
-    // RT的Filter
     public FilterMode filterMode { get; set; }
 
     public void Setup(RenderTargetIdentifier source, Color color)
     {
-        m_Source = source;
-        m_Color = color;
-        m_Mat.SetColor("_Color", m_Color);
+        _source = source;
+        _color = color;
     }
 
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         var cmd = CommandBufferPool.Get();
-        // using的做法就是可以在FrameDebug上看到里面的所有渲染
-        using (new ProfilingScope(cmd, m_ProfilingSampler))
+        using (new ProfilingScope(cmd, _profilingSampler))
         {
-            // 创建一张RT
             var opaqueDesc = renderingData.cameraData.cameraTargetDescriptor;
             opaqueDesc.depthBufferBits = 0;
-            cmd.GetTemporaryRT(m_TemporaryColorTexture.id, opaqueDesc, filterMode);
+            cmd.GetTemporaryRT(_tempColorTexture.id, opaqueDesc, filterMode);
 
-            // 将当前帧的颜色RT用自己的着色器渲处理然后输出到创建的贴图上
-            cmd.Blit(m_Source, m_TemporaryColorTexture.Identifier(), m_Mat);
-            // 将处理后的RT重新渲染到当前帧的颜色RT上
-            cmd.Blit(m_TemporaryColorTexture.Identifier(), m_Source);
+            // Blit(cmd, _source, _tempColorTexture.Identifier(), _mat);
+            // Blit(cmd, _tempColorTexture.Identifier(), _source);
         }
 
-        // 执行
         context.ExecuteCommandBuffer(cmd);
-
-        // 回收
         CommandBufferPool.Release(cmd);
     }
 
-    public override void FrameCleanup(CommandBuffer cmd)
+    public override void OnCameraCleanup(CommandBuffer cmd)
     {
-        base.FrameCleanup(cmd);
-        //销毁创建的RT
-        cmd.ReleaseTemporaryRT(m_TemporaryColorTexture.id);
+        base.OnCameraCleanup(cmd);
+        cmd.ReleaseTemporaryRT(_tempColorTexture.id);
     }
 }
 
 public class RendererFeatureTest : ScriptableRendererFeature
 {
-    //会显示在资产面板上
-    public Color m_Color = Color.red;
+    public Color color = Color.red;
 
-    private RendererPassTest m_Pass;
+    private RendererPassTest pass;
 
-    //feature被创建时调用
     public override void Create()
     {
-        m_Pass = new RendererPassTest();
+        pass = new RendererPassTest();
     }
 
-    //每一帧都会被调用
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        //将当前渲染的颜色RT传到Pass中
-        m_Pass.Setup(renderer.cameraColorTarget, m_Color);
-        //将这个pass添加到渲染队列
-        renderer.EnqueuePass(m_Pass);
+        pass.Setup(renderer.cameraColorTarget, color);
+        renderer.EnqueuePass(pass);
     }
 }
