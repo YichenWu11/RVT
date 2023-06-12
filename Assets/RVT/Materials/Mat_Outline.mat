@@ -107,7 +107,7 @@ Material:
     - _GlossyReflections: 0
     - _Metallic: 0
     - _OcclusionStrength: 1
-    - _OutlineFactor: 1.06
+    - _OutlineFactor: 1.14
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1

@@ -107,5 +107,4 @@ MonoBehaviour:
   m_Name: RendererFeatureTest
   m_EditorClassIdentifier: 
   m_Active: 1
-  color: {r: 1, g: 0, b: 0, a: 1}
-  renderTexture: {fileID: 8400000, guid: e917e74f430f89d41b29fe0425f78428, type: 2}
+  color: {r: 0.6320754, g: 0.58917665, b: 0.051679082, a: 1}

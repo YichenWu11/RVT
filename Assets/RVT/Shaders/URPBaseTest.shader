@@ -31,6 +31,7 @@ Shader "Hidden/URPBaseTest"
  
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
+			float4 _RenderFeatureTest_Color;
  
 			Varyings vert(Attributes v)
 			{
@@ -45,8 +46,8 @@ Shader "Hidden/URPBaseTest"
 			half4 frag(Varyings i) : SV_Target
 			{
 				half4 col = tex2D(_MainTex, i.uv);
-				// return lerp(col, _Color, 0.2);
-				return half4(i.uv, 0.0h, 1.0h);
+				return lerp(col, _RenderFeatureTest_Color, 0.2);
+				// return half4(i.uv, 0.0h, 1.0h);
 			}
 			ENDHLSL
 		}
