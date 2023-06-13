@@ -1,4 +1,4 @@
-﻿Shader "VirtualTexture/VTDrawLookup"
+﻿Shader "Klay/VT/VTDrawLookup"
 {
 	Properties
 	{

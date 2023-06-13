@@ -1,4 +1,4 @@
-﻿Shader "Hidden/VirtualTexture/DebugMipmap"
+﻿Shader "Hidden/VT/DebugMipmap"
 {
 	Properties
 	{

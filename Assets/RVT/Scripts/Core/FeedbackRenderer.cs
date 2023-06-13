@@ -22,7 +22,7 @@ public class FeedbackRenderer : MonoBehaviour
 
     private void Update()
     {
-        Init();
+        FollowMainCamera();
     }
 
     private void Init()
@@ -48,7 +48,6 @@ public class FeedbackRenderer : MonoBehaviour
             FeedbackCamera.targetTexture = TargetTexture;
         }
 
-        // set feedback pass params
         // x: PageTable Size
         // y: Virtual Texture Size
         // z: Max MipMap Level
@@ -56,26 +55,20 @@ public class FeedbackRenderer : MonoBehaviour
         var virtualTable = GetComponent<PageTable>();
         Shader.SetGlobalVector(
             VTFeedbackParam,
-            new Vector4(virtualTable.TableSize,
+            new Vector4(
+                virtualTable.TableSize,
                 virtualTable.TableSize * tileTexture.TileSize * scaleF,
                 virtualTable.MaxMipLevel - 1,
                 mipmapBias));
-
-        CopyCamera(Camera.main);
     }
 
-    private void CopyCamera(Camera camera)
+    private void FollowMainCamera()
     {
-        if (camera == null)
-            return;
-
-        // Unity的Camera.CopyFrom方法会拷贝全部摄像机参数，这不是我们想要的，所以要自己写.
-        FeedbackCamera.transform.position = camera.transform.position;
-        FeedbackCamera.transform.rotation = camera.transform.rotation;
-        FeedbackCamera.cullingMask = camera.cullingMask;
-        FeedbackCamera.projectionMatrix = camera.projectionMatrix;
-        FeedbackCamera.fieldOfView = camera.fieldOfView;
-        FeedbackCamera.nearClipPlane = camera.nearClipPlane;
-        FeedbackCamera.farClipPlane = camera.farClipPlane;
+        var mainCamera = Camera.main;
+        var fbTransform = FeedbackCamera.transform;
+        var mcTransform = mainCamera.transform;
+        fbTransform.position = mcTransform.position;
+        fbTransform.rotation = mcTransform.rotation;
+        FeedbackCamera.projectionMatrix = mainCamera.projectionMatrix;
     }
 }

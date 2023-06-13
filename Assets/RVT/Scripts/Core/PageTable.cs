@@ -13,7 +13,7 @@ public class PageTable : MonoBehaviour
     [SerializeField] private int m_TableSize;
 
     // 调试着色器.
-    // 用于在编辑器中显示贴图mipmap等级
+    // 用于在编辑器中显示贴图 mipmap 等级
     [SerializeField] private Shader m_DebugShader;
 
     [SerializeField] private Shader m_DrawLookup;
@@ -23,8 +23,6 @@ public class PageTable : MonoBehaviour
 
     private Material drawLookupMat;
 
-    // 调试材质.
-    // 用于在编辑器中显示贴图mipmap等级
     private Material m_DebugMaterial;
 
     // 导出的页表寻址贴图
@@ -34,7 +32,7 @@ public class PageTable : MonoBehaviour
     private PageLevelTable[] m_PageTable;
 
     // RT Job对象
-    private RenderTextureJob m_RenderTextureJob;
+    private RenderTask m_RenderTask;
 
     // TiledTexture
     private TiledTexture m_TileTexture;
@@ -61,11 +59,11 @@ public class PageTable : MonoBehaviour
         m_ActivePages.Clear();
     }
 
-    public void Init(RenderTextureJob job, int tileCount)
+    public void Init(RenderTask job, int tileCount)
     {
-        m_RenderTextureJob = job;
-        m_RenderTextureJob.StartRenderJob += OnRenderJob;
-        m_RenderTextureJob.CancelRenderJob += OnRenderJobCancel;
+        m_RenderTask = job;
+        m_RenderTask.StartRenderJob += OnRenderJob;
+        m_RenderTask.CancelRenderJob += OnRenderJobCancel;
 
         m_LookupTexture = new RenderTexture(TableSize, TableSize, 0);
         m_LookupTexture.filterMode = FilterMode.Point;
@@ -260,7 +258,7 @@ public class PageTable : MonoBehaviour
             return;
 
         // 新建加载请求
-        node.Payload.LoadRequest = m_RenderTextureJob.Request(x, y, node.MipLevel);
+        node.Payload.LoadRequest = m_RenderTask.Request(x, y, node.MipLevel);
     }
 
     // 开始渲染

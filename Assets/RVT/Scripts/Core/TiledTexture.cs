@@ -13,8 +13,6 @@ public class TiledTexture : MonoBehaviour
     // 单个Tile的尺寸.
     [SerializeField] private int m_TileSize = 256;
 
-    // 填充尺寸 用来优化边缘采样 
-    // 4 * 2 = 8 是用来支持各向异性过滤
     [SerializeField] private int m_PaddingSize = 4;
 
     // Tile 缓存池

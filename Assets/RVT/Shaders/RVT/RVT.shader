@@ -1,4 +1,4 @@
-Shader "Universal Render Pipeline/Terrain/RVT"
+Shader "Klay/VT/RVT"
 {
    Properties
     {
@@ -62,7 +62,7 @@ Shader "Universal Render Pipeline/Terrain/RVT"
 
             #define _METALLICSPECGLOSSMAP 1
             #define _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A 1
-            #define _RVT
+            // #define _RVT
 
             // -------------------------------------
             // Universal Pipeline keywords
@@ -95,7 +95,7 @@ Shader "Universal Render Pipeline/Terrain/RVT"
             // Sample normal in pixel shader when doing instancing
             #pragma shader_feature_local _TERRAIN_INSTANCED_PERPIXEL_NORMAL
 
-            #include "VirtualTexture.cginc"
+            #include "VT.cginc"
             #include "../TerrainLitInput.hlsl"
             #include "../TerrainLitPasses.hlsl"
             ENDHLSL

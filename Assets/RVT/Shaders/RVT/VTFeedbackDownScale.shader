@@ -1,4 +1,4 @@
-﻿Shader "Hidden/VirtualTexture/FeedbackDownScale"
+﻿Shader "Hidden/VT/FeedbackDownScale"
 {
 	Properties
 	{

@@ -1,4 +1,4 @@
-﻿Shader "VirtualTexture/Debug"
+﻿Shader "Klay/VT/Debug"
 {
 	Properties
 	{

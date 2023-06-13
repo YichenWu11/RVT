@@ -5,7 +5,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
 
-#include "RVT/VirtualTexture.cginc"
+#include "RVT/VT.cginc"
 
 struct Attributes
 {

@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Mat_RVTLit
+  m_Name: Mat_VTTerrain
   m_Shader: {fileID: 4800000, guid: dad1cb8122bb48144b6a519c9a2fb861, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []

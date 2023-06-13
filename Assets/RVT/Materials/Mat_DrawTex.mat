@@ -45,6 +45,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Control:
+        m_Texture: {fileID: 4124605041443312268, guid: 00c04cce3db6f6540b5528a07eac15bb, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -71,7 +75,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _Diffuse4:
         m_Texture: {fileID: 2800000, guid: 91463d030187e984ca34edb5a868f000, type: 3}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 10, y: 10}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
@@ -155,12 +159,12 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _BlendTile: {r: 0.0039339066, g: 0.0039339066, b: 0.29748678, a: 0.038087368}
+    - _BlendTile: {r: 0.0040283203, g: 0.0040283203, b: 0.74993896, a: 0.3319702}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _TileOffset1: {r: 0.40283203, g: 0.40283203, b: 30.462646, a: 3.9001465}
-    - _TileOffset2: {r: 0.40283203, g: 0.40283203, b: 30.462646, a: 3.9001465}
-    - _TileOffset3: {r: 0.40283203, g: 0.40283203, b: 30.462646, a: 3.9001465}
-    - _TileOffset4: {r: 0.40283203, g: 0.40283203, b: 30.462646, a: 3.9001465}
+    - _TileOffset1: {r: 0.4125, g: 0.4125, b: 76.793755, a: 33.99375}
+    - _TileOffset2: {r: 0.4125, g: 0.4125, b: 76.793755, a: 33.99375}
+    - _TileOffset3: {r: 0.4125, g: 0.4125, b: 76.793755, a: 33.99375}
+    - _TileOffset4: {r: 0.4125, g: 0.4125, b: 76.793755, a: 33.99375}
   m_BuildTextureStacks: []

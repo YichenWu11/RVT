@@ -8,9 +8,9 @@ public class FeedbackReader : MonoBehaviour
     // 回读目标缩放比例
     [SerializeField] private ScaleFactor m_ReadbackScale;
 
-    // 缩放着色器.
-    // Feedback目标有特定的缩放逻辑，必须要通过自定义着色器来实现
-    // 具体逻辑为:找到区域中 mipmap 等级最小的像素作为最终像素，其余像素抛弃
+    // 缩放着色器
+    // Feedback目标有特定的缩放逻辑, 通过自定义着色器来实现
+    // 具体逻辑为: 找到区域中 mipmap 等级最小的像素作为最终像素，其余像素抛弃
     [SerializeField] private Shader m_DownScaleShader;
 
     // 用于在编辑器中显示贴图 mipmap 等级

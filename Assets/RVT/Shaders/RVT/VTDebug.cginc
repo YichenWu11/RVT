@@ -1,7 +1,7 @@
 ﻿#ifndef VIRTUAL_TEXTURE_DEBUG_INCLUDED
 #define VIRTUAL_TEXTURE_DEBUG_INCLUDED
 
-#include "VirtualTexture.cginc"
+#include "VT.cginc"
 
 float VTGetMipLevel(float2 uv)
 {
