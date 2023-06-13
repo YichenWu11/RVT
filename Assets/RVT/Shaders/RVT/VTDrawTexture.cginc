@@ -1,4 +1,7 @@
-﻿sampler2D _MainTex;
+﻿#ifndef VIRTUAL_DRAW_TEXTURE_INCLUDED
+#define VIRTUAL_DRAW_TEXTURE_INCLUDED
+
+sampler2D _MainTex;
 sampler2D _Diffuse1;
 sampler2D _Diffuse2;
 sampler2D _Diffuse3;
@@ -59,6 +62,9 @@ PixelOutput frag(v2f_drawTex i) : SV_Target
 
     PixelOutput o;
     o.col0 = blend.r * Diffuse1 + blend.g * Diffuse2 + blend.b * Diffuse3 + blend.a * Diffuse4;
+    // o.col0 = Diffuse2;
     o.col1 = blend.r * Normal1 + blend.g * Normal2 + blend.b * Normal3 + blend.a * Normal4;
     return o;
 }
+
+#endif

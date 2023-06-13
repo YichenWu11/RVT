@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -302,7 +301,6 @@ public class PageTable : MonoBehaviour
         m_ActivePages.Remove(id);
     }
 
-    [Conditional("ENABLE_DEBUG_TEXTURE")]
     private void InitDebugTexture(int w, int h)
     {
 #if UNITY_EDITOR
@@ -312,7 +310,6 @@ public class PageTable : MonoBehaviour
 #endif
     }
 
-    [Conditional("ENABLE_DEBUG_TEXTURE")]
     private void UpdateDebugTexture()
     {
 #if UNITY_EDITOR

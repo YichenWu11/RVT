@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -112,7 +111,6 @@ public class FeedbackReader : MonoBehaviour
         }
     }
 
-    [Conditional("ENABLE_DEBUG_TEXTURE")]
     private void InitDebugTexture(int width, int height)
     {
 #if UNITY_EDITOR
@@ -122,7 +120,6 @@ public class FeedbackReader : MonoBehaviour
 #endif
     }
 
-    [Conditional("ENABLE_DEBUG_TEXTURE")]
     protected void UpdateDebugTexture()
     {
 #if UNITY_EDITOR

@@ -20,6 +20,11 @@ public class FeedbackRenderer : MonoBehaviour
         Init();
     }
 
+    private void Update()
+    {
+        Init();
+    }
+
     private void Init()
     {
         var mainCamera = Camera.main;
@@ -55,5 +60,22 @@ public class FeedbackRenderer : MonoBehaviour
                 virtualTable.TableSize * tileTexture.TileSize * scaleF,
                 virtualTable.MaxMipLevel - 1,
                 mipmapBias));
+
+        CopyCamera(Camera.main);
+    }
+
+    private void CopyCamera(Camera camera)
+    {
+        if (camera == null)
+            return;
+
+        // Unity的Camera.CopyFrom方法会拷贝全部摄像机参数，这不是我们想要的，所以要自己写.
+        FeedbackCamera.transform.position = camera.transform.position;
+        FeedbackCamera.transform.rotation = camera.transform.rotation;
+        FeedbackCamera.cullingMask = camera.cullingMask;
+        FeedbackCamera.projectionMatrix = camera.projectionMatrix;
+        FeedbackCamera.fieldOfView = camera.fieldOfView;
+        FeedbackCamera.nearClipPlane = camera.nearClipPlane;
+        FeedbackCamera.farClipPlane = camera.farClipPlane;
     }
 }

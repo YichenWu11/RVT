@@ -5,6 +5,8 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
 
+#include "RVT/VirtualTexture.cginc"
+
 struct Attributes
 {
     float4 positionOS : POSITION;
@@ -320,9 +322,32 @@ void ComputeMasks(out half4 masks[4], half4 hasMask, Varyings IN)
     masks[3] += _MaskMapRemapOffset3.rgba;
 }
 
-float _Terrain_Width;
-float _Terrain_Length;
-float4 _VTFeedbackParam;
+half4 GetRVTColor(Varyings IN)
+{
+    float2 uv = (IN.positionWS.xz - _VTRealRect.xy) / _VTRealRect.zw;
+    float2 uvInt = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
+    float4 page = tex2D(_VTLookupTex, uvInt) * 255;
+    // #ifdef _SHOWRVTMIPMAP
+    // return float4(clamp(1 - page.b * 0.1, 0, 1), 0, 0, 1);
+    // #endif
+    float2 inPageOffset = frac(uv * exp2(_VTPageParam.z - page.b));
+    uv = (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) + inPageOffset * _VTTileParam.y + _VTTileParam.x) /
+        _VTTileParam.zw;
+    half3 albedo = tex2D(_VTDiffuse, uv);
+    half3 normalTS = UnpackNormalScale(tex2D(_VTNormal, uv), 1);
+    InputData inputData;
+    InitializeInputData(IN, normalTS, inputData);
+    half metallic = 0;
+    half smoothness = 0.1;
+    half occlusion = 1;
+    half alpha = 1;
+    half4 color = UniversalFragmentPBR(inputData, albedo, metallic, /* specular */ half3(0.0h, 0.0h, 0.0h), smoothness,
+                                       occlusion, /* emission */ half3(0, 0, 0), alpha);
+    SplatmapFinalColor(color, inputData.fogCoord);
+
+    // return half4(uvInt / 255.0h, 0.0h, 1.0h);
+    return half4(color.rgb, 1.0h);
+}
 
 // Used in Standard Terrain shader
 #ifdef TERRAIN_GBUFFER
@@ -332,6 +357,11 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
 #endif
 {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
+
+    #ifdef _RVT
+    return GetRVTColor(IN);
+    #endif
+
     #ifdef _ALPHATEST_ON
     ClipHoles(IN.uvMainAndLM.xy);
     #endif
@@ -431,10 +461,8 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
 
     SplatmapFinalColor(color, inputData.fogCoord);
 
-    float2 uv_prop = float2(inputData.positionWS.xz) / float2(_Terrain_Width, _Terrain_Length);
-    float2 page = floor(uv_prop * _VTFeedbackParam.x);
-
     return half4(color.rgb, 1.0h);
+    // return half4(splatControl.rgb, 1.0h);
     // return half4(page / 255.0, 0.0h, 1.0h);
     #endif
 }
