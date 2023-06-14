@@ -464,12 +464,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 642987e61803b0046865833f7ad0d21c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UseFeed: 1
-  Radius: 512
+  ViewRadius: 500
   TerrainList:
   - {fileID: 1042161578}
   DrawTextureMaterial: {fileID: 2100000, guid: 26be0d72645c0b945ad4cb40b55d5458, type: 2}
-  ViewDistanceScale: 3
   PageTable: {fileID: 0}
 --- !u!114 &982010931
 MonoBehaviour:
@@ -483,9 +481,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 829a64588ab1c2b48a0d7945550fc5fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_RegionSize: {x: 10, y: 10}
-  m_TileSize: 256
-  m_PaddingSize: 4
+  regionSize: {x: 10, y: 10}
+  tileSize: 256
 --- !u!114 &982010932
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -603,9 +600,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69c9ba4aea1a3274aa6358ed56cf852a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_TableSize: 256
-  m_DebugShader: {fileID: 4800000, guid: 3e5cbdff1f11566449b9744ec1ea6789, type: 3}
-  m_DrawLookup: {fileID: 4800000, guid: faee5729eabf1424bb61a2a97f45d70f, type: 3}
+  tableSize: 64
+  debugShader: {fileID: 4800000, guid: 3e5cbdff1f11566449b9744ec1ea6789, type: 3}
+  drawLookupShader: {fileID: 4800000, guid: faee5729eabf1424bb61a2a97f45d70f, type: 3}
 --- !u!1 &1042161576
 GameObject:
   m_ObjectHideFlags: 0
@@ -677,7 +674,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1042161576}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -139.8, z: 0}
+  m_LocalPosition: {x: 0, y: -122.9, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -98,54 +98,6 @@ Shader "KlayRVT/Terrain/Lit"
             #include "TerrainLitPasses.hlsl"
             ENDHLSL
         }
-        
-        Pass
-		{
-			Tags { "LightMode" = "Feedback" }
-
-			HLSLPROGRAM
-			#pragma multi_compile_instancing
-			#pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap
-			#pragma shader_feature_local _TERRAIN_INSTANCED_PERPIXEL_NORMAL
-
-	        #pragma vertex SplatmapVert
-            #pragma fragment SplatmapFragment
-			#include "TerrainLitInput.hlsl"
-			#include "TerrainFeedbackPass.hlsl"
-			ENDHLSL
-		}
-        
-        Pass
-		{
-			Tags { "LightMode" = "DrawTexture" }
-
-			HLSLPROGRAM
-			#pragma multi_compile_instancing
-			#pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap
-			#pragma shader_feature_local _TERRAIN_INSTANCED_PERPIXEL_NORMAL
-
-	        #pragma vertex SplatmapVert
-            #pragma fragment SplatmapFragment
-			#include "TerrainLitInput.hlsl"
-			#include "VTDrawTexture.hlsl"
-			ENDHLSL
-		}
-    	
-    	Pass
-		{
-			Tags { "LightMode" = "DrawNormal" }
-
-			HLSLPROGRAM
-			#pragma multi_compile_instancing
-			#pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap
-			#pragma shader_feature_local _TERRAIN_INSTANCED_PERPIXEL_NORMAL
-
-	        #pragma vertex SplatmapVert
-            #pragma fragment SplatmapFragment
-			#include "TerrainLitInput.hlsl"
-			#include "VTDrawNormal.hlsl"
-			ENDHLSL
-		}
 
         Pass
         {

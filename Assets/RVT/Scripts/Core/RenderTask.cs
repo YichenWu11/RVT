@@ -23,36 +23,35 @@ public class RenderTextureRequest
 public class RenderTask
 {
     // 一帧最多处理几个
-    private readonly int m_Limit = 2;
+    private readonly int _limit = 2;
 
     // 等待处理的请求.
-    private readonly List<RenderTextureRequest> m_PendingRequests = new();
+    private readonly List<RenderTextureRequest> _pendingRequests = new();
 
     // 渲染完成的事件回调.
-    public event Action<RenderTextureRequest> StartRenderJob;
+    public event Action<RenderTextureRequest> StartRenderTask;
 
     // 渲染取消的事件回调.
-    public event Action<RenderTextureRequest> CancelRenderJob;
+    public event Action<RenderTextureRequest> CancelRenderTask;
 
     public void Update()
     {
-        // Debug.Log($"RenquestCount:{m_PendingRequests.Count}");
-        if (m_PendingRequests.Count <= 0)
+        if (_pendingRequests.Count <= 0)
             return;
 
         // 优先处理 mipmap 等级高的请求
-        m_PendingRequests.Sort((x, y) => { return x.MipLevel.CompareTo(y.MipLevel); });
+        _pendingRequests.Sort((x, y) => x.MipLevel.CompareTo(y.MipLevel));
 
-        var count = m_Limit;
-        while (count > 0 && m_PendingRequests.Count > 0)
+        var count = _limit;
+        while (count > 0 && _pendingRequests.Count > 0)
         {
             count--;
             // 将第一个请求从等待队列移到运行队列
-            var req = m_PendingRequests[m_PendingRequests.Count - 1];
-            m_PendingRequests.RemoveAt(m_PendingRequests.Count - 1);
+            var req = _pendingRequests[_pendingRequests.Count - 1];
+            _pendingRequests.RemoveAt(_pendingRequests.Count - 1);
 
             // 开始渲染
-            StartRenderJob?.Invoke(req);
+            StartRenderTask?.Invoke(req);
         }
     }
 
@@ -60,21 +59,21 @@ public class RenderTask
     public RenderTextureRequest Request(int x, int y, int mip)
     {
         // 是否已经在请求队列中
-        foreach (var r in m_PendingRequests)
+        foreach (var r in _pendingRequests)
             if (r.PageX == x && r.PageY == y && r.MipLevel == mip)
                 return null;
 
         // 加入待处理列表
         var request = new RenderTextureRequest(x, y, mip);
-        m_PendingRequests.Add(request);
+        _pendingRequests.Add(request);
 
         return request;
     }
 
-    public void ClearJob()
+    public void Clear()
     {
-        foreach (var r in m_PendingRequests) CancelRenderJob?.Invoke(r);
+        foreach (var r in _pendingRequests) CancelRenderTask?.Invoke(r);
 
-        m_PendingRequests.Clear();
+        _pendingRequests.Clear();
     }
 }

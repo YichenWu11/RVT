@@ -3,9 +3,7 @@
 	Properties
 	{
 	}
-
-		// Universal Render Pipeline subshader. If URP is installed this will be used.
-		SubShader
+	SubShader
 	{
 		Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalRenderPipeline"}
 		ZTest Always
@@ -28,6 +26,10 @@
 
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
+
+			// PageInfo
+			// xy : drawPos
+			// z  : mipmapLevel / 255
 
 			struct Varyings
 			{

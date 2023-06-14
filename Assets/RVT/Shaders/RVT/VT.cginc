@@ -15,34 +15,35 @@ struct VTV2f
     float2 uv : TEXCOORD0;
 };
 
-// x: page size
-// y: vertual texture size
-// z: max mipmap level
-// w: mipmap level bias
+// x : page size
+// y : virtual texture size
+// z : max mipmap level
+// w : mipmap level bias
 float4 _VTFeedbackParam;
 
-// xy: page count
-// z:  max mipmap level
+// x : table size
+// y : 1 / table size
+// z :  max mipmap level
 float4 _VTPageParam;
-
-// x: padding size
-// y: center size
-// zw: 1 / tile count
-float4 _VTTileParam;
-float4 _VTRealRect;
-
 sampler2D _VTLookupTex;
 
+// x : 0
+// y : tile size
+// zw: region size * tile size 
+float4 _VTTileParam;
 sampler2D _VTDiffuse;
 sampler2D _VTNormal;
+
+float4 _VTRealRect;
+
 
 VTV2f VTVertFromPos(VTAppdata v)
 {
     VTV2f o;
 
     o.pos = TransformObjectToHClip(v.vertex.xyz);
-    float2 posWS = TransformObjectToWorld(v.vertex).xz;
-    o.uv = (posWS - _VTRealRect.xy) / _VTRealRect.zw;
+    float2 posW = TransformObjectToWorld(v.vertex).xz;
+    o.uv = (posW - _VTRealRect.xy) / _VTRealRect.zw;
 
     return o;
 }
@@ -79,6 +80,38 @@ float4 VTTex2D1(float2 uv)
 float4 VTTex2D(float2 uv)
 {
     return VTTex2DDiffuse(uv);
+}
+
+// FOR DEBUG
+float VTGetMipLevel(float2 uv)
+{
+    float4 page = tex2D(_VTLookupTex, uv);
+    return page.z * 255;
+}
+
+float4 VTGetMipmapLevelColor(float mip)
+{
+    const float4 colors[12] = {
+        float4(1, 0, 0, 1),
+        float4(0, 0, 1, 1),
+        float4(1, 0.5f, 0, 1),
+        float4(1, 0, 0.5f, 1),
+        float4(0, 0.5f, 0.5f, 1),
+        float4(0, 0.25f, 0.5f, 1),
+        float4(0.25f, 0.5f, 0, 1),
+        float4(0.5f, 0, 1, 1),
+        float4(1, 0.25f, 0.5f, 1),
+        float4(0.5f, 0.5f, 0.5f, 1),
+        float4(0.25f, 0.25f, 0.25f, 1),
+        float4(0.125f, 0.125f, 0.125f, 1)
+    };
+    return colors[clamp(mip, 0, 11)];
+}
+
+
+float4 VTDebugMipmapLevel(sampler2D tex, float2 uv) : SV_Target
+{
+    return VTGetMipmapLevelColor(tex2D(tex, uv).z * 255);
 }
 
 #endif

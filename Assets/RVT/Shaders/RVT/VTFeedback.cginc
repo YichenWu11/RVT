@@ -2,6 +2,8 @@
 #define VIRTUAL_TEXTURE_FEEDBACK_INCLUDED
 
 #include "VT.cginc"
+#include "UnityInstancing.cginc"
+
 #define UNITY_INSTANCING_ENABLED
 
 sampler2D _MainTex;
@@ -69,22 +71,31 @@ float4 VTFragFeedback(feedback_v2f i) : SV_Target
     int mipmap_level = clamp(int(0.5 * log2(max(dot(dx, dx), dot(dy, dy))) + 0.5 + _VTFeedbackParam.w), 0,
                              _VTFeedbackParam.z); // _VTFeedbackParam.z : mipmapBias
 
-    return float4(page / 255.0f, mipmap_level / 255.0f, 1.0f);
+    return float4(page / 255.0, mipmap_level / 255.0, 1.0f);
 }
 
+/*
+    _MainTex_TexelSize
+        x : 1.0 / width
+        y : 1.0 / height
+        z : width
+        w : height
+ */
 
 float4 GetMaxFeedback(float2 uv, int count)
 {
-    float4 col = float4(1, 1, 1, 1);
+    float4 color = float4(1, 1, 1, 1);
     for (int y = 0; y < count; y++)
     {
         for (int x = 0; x < count; x++)
         {
-            float4 col1 = tex2D(_MainTex, uv + float2(_MainTex_TexelSize.x * x, _MainTex_TexelSize.y * y));
-            col = lerp(col, col1, step(col1.b, col.b));
+            float4 color1 = tex2D(_MainTex, uv + float2(_MainTex_TexelSize.x * x, _MainTex_TexelSize.y * y));
+            // 取 mipmapLevel 最小的 pixel
+            // step(y, x) -> (x >= y) ? 1 : 0
+            color = lerp(color, color1, step(color1.z, color.z)); // z : (mipmapLevel / 255.0f)
         }
     }
-    return col;
+    return color;
 }
 
 #endif

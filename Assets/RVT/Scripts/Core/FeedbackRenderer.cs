@@ -4,16 +4,15 @@ public class FeedbackRenderer : MonoBehaviour
 {
     private static readonly int VTFeedbackParam = Shader.PropertyToID("_VTFeedbackParam");
 
-    // RT 缩放比例
+    // Feedback RT 缩放比例
     [SerializeField] private ScaleFactor scale;
 
-    // mipmap 层级偏移
     [SerializeField] private int mipmapBias;
 
-    public Camera FeedbackCamera { get; set; }
+    public Camera FeedbackCamera { get; private set; }
 
-    // 预渲染 RT
-    public RenderTexture TargetTexture { get; set; }
+    // Feedback RT
+    public RenderTexture TargetTexture { get; private set; }
 
     private void Start()
     {

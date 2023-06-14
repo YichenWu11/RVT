@@ -1,4 +1,4 @@
-﻿Shader "Hidden/VT/FeedbackDownScale"
+﻿Shader "Klay/VT/FeedbackDownScale"
 {
 	Properties
 	{
@@ -19,10 +19,12 @@
 			#include "VTFeedback.cginc"	
 			#pragma vertex VTVert
 			#pragma fragment frag
+			
 			float4 frag(VTV2f i) : SV_Target
 			{
 				return GetMaxFeedback(i.uv, 2);
 			}
+			
 			ENDHLSL
 		}
 
@@ -34,10 +36,12 @@
 			#include "VTFeedback.cginc"	
 			#pragma vertex VTVert
 			#pragma fragment frag
+			
 			float4 frag(VTV2f i) : SV_Target
 			{
 				return GetMaxFeedback(i.uv, 4);
 			}
+			
 			ENDHLSL
 		}
 
@@ -49,10 +53,12 @@
 			#include "VTFeedback.cginc"	
 			#pragma vertex VTVert
 			#pragma fragment frag
+			
 			float4 frag(VTV2f i) : SV_Target
 			{
 				return GetMaxFeedback(i.uv, 8);
 			}
+			
 			ENDHLSL
 		}
 	}

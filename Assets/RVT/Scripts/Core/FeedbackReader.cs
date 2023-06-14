@@ -8,9 +8,7 @@ public class FeedbackReader : MonoBehaviour
     // 回读目标缩放比例
     [SerializeField] private ScaleFactor m_ReadbackScale;
 
-    // 缩放着色器
-    // Feedback目标有特定的缩放逻辑, 通过自定义着色器来实现
-    // 具体逻辑为: 找到区域中 mipmap 等级最小的像素作为最终像素，其余像素抛弃
+    // 缩放着色器, 找到区域中 mipmap 等级最小的像素作为最终像素，其余像素抛弃
     [SerializeField] private Shader m_DownScaleShader;
 
     // 用于在编辑器中显示贴图 mipmap 等级
@@ -64,9 +62,9 @@ public class FeedbackReader : MonoBehaviour
     public event Action<Texture2D> OnFeedbackReadComplete;
 
     // 发起回读请求
-    public void NewRequest(RenderTexture texture, bool forceRequestAndWaitComplete = false)
+    public void ReadbackRequest(RenderTexture texture)
     {
-        if (!m_ReadbackRequest.done && !m_ReadbackRequest.hasError && !forceRequestAndWaitComplete)
+        if (m_ReadbackRequest is { done: false, hasError: false })
             return;
 
         // 缩放后的尺寸
@@ -79,7 +77,6 @@ public class FeedbackReader : MonoBehaviour
             if (m_DownScaleTexture == null || m_DownScaleTexture.width != width || m_DownScaleTexture.height != height)
                 m_DownScaleTexture = new RenderTexture(width, height, 0);
 
-            m_DownScaleTexture.DiscardContents();
             Graphics.Blit(texture, m_DownScaleTexture, m_DownScaleMaterial, m_DownScaleMaterialPass);
             texture = m_DownScaleTexture;
         }
@@ -87,40 +84,40 @@ public class FeedbackReader : MonoBehaviour
         // 贴图尺寸检测
         if (m_ReadbackTexture == null || m_ReadbackTexture.width != width || m_ReadbackTexture.height != height)
         {
-            m_ReadbackTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            m_ReadbackTexture.filterMode = FilterMode.Point;
-            m_ReadbackTexture.wrapMode = TextureWrapMode.Clamp;
+            m_ReadbackTexture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
 
-            InitDebugTexture(width, height);
+#if UNITY_EDITOR
+            DebugTexture = new RenderTexture(width, height, 0)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+#endif
         }
 
-        // 发起异步回读请求
+        // 异步回读请求
         m_ReadbackRequest = AsyncGPUReadback.Request(texture);
-        if (forceRequestAndWaitComplete) m_ReadbackRequest.WaitForCompletion();
     }
 
     // 检测回读请求状态
     public void UpdateRequest()
     {
-        if (m_ReadbackRequest.done && !m_ReadbackRequest.hasError)
+        if (m_ReadbackRequest is { done: true, hasError: false })
         {
             // 更新数据并分发事件
             m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(m_ReadbackRequest.GetData<Color32>());
+            // 把在 CPU 端的更改同步到 GPU 端
+            m_ReadbackTexture.Apply(false);
             OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
             UpdateDebugTexture();
         }
     }
 
-    private void InitDebugTexture(int width, int height)
-    {
-#if UNITY_EDITOR
-        DebugTexture = new RenderTexture(width, height, 0);
-        DebugTexture.filterMode = FilterMode.Point;
-        DebugTexture.wrapMode = TextureWrapMode.Clamp;
-#endif
-    }
-
-    protected void UpdateDebugTexture()
+    private void UpdateDebugTexture()
     {
 #if UNITY_EDITOR
         if (m_ReadbackTexture == null || m_DebugShader == null)
@@ -129,9 +126,6 @@ public class FeedbackReader : MonoBehaviour
         if (m_DebugMaterial == null)
             m_DebugMaterial = new Material(m_DebugShader);
 
-        m_ReadbackTexture.Apply(false);
-
-        DebugTexture.DiscardContents();
         Graphics.Blit(m_ReadbackTexture, DebugTexture, m_DebugMaterial);
 #endif
     }

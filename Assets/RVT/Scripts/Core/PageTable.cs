@@ -1,82 +1,80 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class PageTable : MonoBehaviour
 {
     private static readonly int VTLookupTex = Shader.PropertyToID("_VTLookupTex");
     private static readonly int VTPageParam = Shader.PropertyToID("_VTPageParam");
+
     private static readonly int PageInfo = Shader.PropertyToID("_PageInfo");
     private static readonly int ImageMvp = Shader.PropertyToID("_ImageMVP");
 
     // 页表尺寸
-    [SerializeField] private int m_TableSize;
+    [SerializeField] private int tableSize = 128;
 
-    // 调试着色器.
-    // 用于在编辑器中显示贴图 mipmap 等级
-    [SerializeField] private Shader m_DebugShader;
+    [SerializeField] private Shader debugShader;
 
-    [SerializeField] private Shader m_DrawLookup;
+    [SerializeField] private Shader drawLookupShader;
 
     // 当前活跃的页表
-    private readonly Dictionary<Vector2Int, TableNodeCell> m_ActivePages = new();
+    private readonly Dictionary<Vector2Int, TableNodeCell> _activePages = new();
 
-    private Material drawLookupMat;
+    private Material _debugMaterial;
 
-    private Material m_DebugMaterial;
+    private Material _drawLookupMaterial;
 
     // 导出的页表寻址贴图
-    private RenderTexture m_LookupTexture;
+    private Texture2D _lookupTexture;
 
     // 页表层级结构
-    private PageLevelTable[] m_PageTable;
+    private PageLevelTable[] _pageTable;
+
+    private Mesh _quadMesh;
 
     // RT Job对象
-    private RenderTask m_RenderTask;
+    private RenderTask _renderTask;
 
     // TiledTexture
-    private TiledTexture m_TileTexture;
-
-    private Mesh mQuad;
+    private TiledTexture _tileTexture;
 
     // 调试贴图
     public RenderTexture DebugTexture { get; private set; }
 
     // 页表尺寸.
-    public int TableSize => m_TableSize;
-
-    public bool UseFeed { get; set; } = true;
+    public int TableSize => tableSize;
 
     // 最大mipmap等级
     public int MaxMipLevel => (int)Mathf.Log(TableSize, 2);
 
-    public void Reset()
+    public void Init(RenderTask task, int tileCount)
     {
-        for (var i = 0; i <= MaxMipLevel; i++)
-        for (var j = 0; j < m_PageTable[i].NodeCellCount; j++)
-        for (var k = 0; k < m_PageTable[i].NodeCellCount; k++)
-            InvalidatePage(m_PageTable[i].Cell[j, k].Payload.TileIndex);
-        m_ActivePages.Clear();
-    }
+        _renderTask = task;
+        _renderTask.StartRenderTask += OnRenderTask;
+        _renderTask.CancelRenderTask += OnRenderTaskCancel;
 
-    public void Init(RenderTask job, int tileCount)
-    {
-        m_RenderTask = job;
-        m_RenderTask.StartRenderJob += OnRenderJob;
-        m_RenderTask.CancelRenderJob += OnRenderJobCancel;
+        _lookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Point,
+            wrapMode = TextureWrapMode.Clamp
+        };
 
-        m_LookupTexture = new RenderTexture(TableSize, TableSize, 0);
-        m_LookupTexture.filterMode = FilterMode.Point;
-        m_LookupTexture.wrapMode = TextureWrapMode.Clamp;
+        // _lookupTexture = new RenderTexture(TableSize, TableSize, 0)
+        // {
+        //     filterMode = FilterMode.Point,
+        //     wrapMode = TextureWrapMode.Clamp
+        // };
 
-        m_PageTable = new PageLevelTable[MaxMipLevel + 1];
-        for (var i = 0; i <= MaxMipLevel; i++) m_PageTable[i] = new PageLevelTable(i, TableSize);
-        drawLookupMat = new Material(m_DrawLookup);
-        drawLookupMat.enableInstancing = true;
+        _pageTable = new PageLevelTable[MaxMipLevel + 1];
+        for (var i = 0; i <= MaxMipLevel; i++) _pageTable[i] = new PageLevelTable(i, TableSize);
+
+        _drawLookupMaterial = new Material(drawLookupShader)
+        {
+            enableInstancing = true
+        };
 
         Shader.SetGlobalTexture(
             VTLookupTex,
-            m_LookupTexture);
+            _lookupTexture);
         Shader.SetGlobalVector(
             VTPageParam,
             new Vector4(
@@ -85,78 +83,35 @@ public class PageTable : MonoBehaviour
                 MaxMipLevel,
                 0));
 
-        InitDebugTexture(TableSize, TableSize);
-        InitializeQuadMesh();
+        // 创建 DebugTexture
+#if UNITY_EDITOR
+        DebugTexture = new RenderTexture(TableSize, TableSize, 0)
+        {
+            wrapMode = TextureWrapMode.Clamp,
+            filterMode = FilterMode.Point
+        };
+#endif
 
-        m_TileTexture = GetComponent<TiledTexture>();
-        m_TileTexture.OnTileUpdateComplete += InvalidatePage;
+        _quadMesh = Util.BuildQuadMesh();
+
+        _tileTexture = GetComponent<TiledTexture>();
+        _tileTexture.OnTileUpdateComplete += InvalidatePage;
         GetComponent<FeedbackReader>().OnFeedbackReadComplete += ProcessFeedback;
         ActivatePage(0, 0, MaxMipLevel);
     }
 
     public void ChangeViewRect(Vector2Int offset)
     {
-        for (var i = 0; i <= MaxMipLevel; i++) m_PageTable[i].ChangeViewRect(offset, InvalidatePage);
-
+        for (var i = 0; i <= MaxMipLevel; i++) _pageTable[i].ChangeViewRect(offset, InvalidatePage);
         ActivatePage(0, 0, MaxMipLevel);
     }
 
-    public void UpdatePage(Vector2Int center)
-    {
-        if (UseFeed) return;
-
-        for (var i = 0; i < TableSize; i++)
-        for (var j = 0; j < TableSize; j++)
-        {
-            var thisPos = new Vector2Int(i, j);
-            var ManhattanDistance = thisPos - center;
-            var absX = Mathf.Abs(ManhattanDistance.x);
-            var absY = Mathf.Abs(ManhattanDistance.y);
-            var absMax = Mathf.Max(absX, absY);
-            var tempMipLevel = (int)Mathf.Floor(Mathf.Sqrt(2 * absMax));
-            tempMipLevel = Mathf.Clamp(tempMipLevel, 0, MaxMipLevel);
-            ActivatePage(i, j, tempMipLevel);
-        }
-
-        UpdateLookup();
-    }
-
-    private void InitializeQuadMesh()
-    {
-        var quadVertexList = new List<Vector3>();
-        var quadTriangleList = new List<int>();
-        var quadUVList = new List<Vector2>();
-
-        quadVertexList.Add(new Vector3(0, 1, 0.1f));
-        quadUVList.Add(new Vector2(0, 1));
-        quadVertexList.Add(new Vector3(0, 0, 0.1f));
-        quadUVList.Add(new Vector2(0, 0));
-        quadVertexList.Add(new Vector3(1, 0, 0.1f));
-        quadUVList.Add(new Vector2(1, 0));
-        quadVertexList.Add(new Vector3(1, 1, 0.1f));
-        quadUVList.Add(new Vector2(1, 1));
-
-        quadTriangleList.Add(0);
-        quadTriangleList.Add(1);
-        quadTriangleList.Add(2);
-
-        quadTriangleList.Add(2);
-        quadTriangleList.Add(3);
-        quadTriangleList.Add(0);
-
-        mQuad = new Mesh();
-        mQuad.SetVertices(quadVertexList);
-        mQuad.SetUVs(0, quadUVList);
-        mQuad.SetTriangles(quadTriangleList, 0);
-    }
-
-    // 处理回读数据
+    // 处理回读
     private void ProcessFeedback(Texture2D texture)
     {
-        if (!UseFeed) return;
-
         // 激活对应页表
-        foreach (var c in texture.GetRawTextureData<Color32>()) ActivatePage(c.r, c.g, c.b);
+        foreach (var color in texture.GetRawTextureData<Color32>())
+            ActivatePage(color.r, color.g, color.b);
 
         UpdateLookup();
     }
@@ -165,54 +120,30 @@ public class PageTable : MonoBehaviour
     {
         // 将页表数据写入页表贴图
         var currentFrame = (byte)Time.frameCount;
-        var drawList = new List<DrawPageInfo>();
-        foreach (var kv in m_ActivePages)
+        var pixels = _lookupTexture.GetRawTextureData<Color32>();
+        foreach (var kv in _activePages)
         {
             var page = kv.Value;
+
             // 只写入当前帧活跃的页表
-            if (page.Payload.ActiveFrame != Time.frameCount)
+            if (page.Data.ActiveFrame != Time.frameCount)
                 continue;
 
-            var table = m_PageTable[page.MipLevel];
-            var offset = table.pageOffset;
-            var perSize = table.PerCellSize;
-            var lb = new Vector2Int(page.Rect.xMin - offset.x * perSize,
-                page.Rect.yMin - offset.y * perSize);
-            while (lb.x < 0) lb.x += TableSize;
-            while (lb.y < 0) lb.y += TableSize;
-
-            drawList.Add(new DrawPageInfo
+            // a位保存写入frame序号，用于检查pixels是否为当前帧写入的数据(避免旧数据残留)
+            var c = new Color32((byte)page.Data.TileIndex.x, (byte)page.Data.TileIndex.y, (byte)page.MipLevel,
+                currentFrame);
+            for (var y = page.Rect.y; y < page.Rect.yMax; y++)
+            for (var x = page.Rect.x; x < page.Rect.xMax; x++)
             {
-                rect = new Rect(lb.x, lb.y, page.Rect.width, page.Rect.height),
-                mip = page.MipLevel,
-                drawPos = new Vector2((float)page.Payload.TileIndex.x / 255,
-                    (float)page.Payload.TileIndex.y / 255)
-            });
+                var id = y * TableSize + x;
+                if (pixels[id].b > c.b || // 写入mipmap等级最小的页表
+                    pixels[id].a != currentFrame) // 当前帧还没有写入过数据
+                    pixels[id] = c;
+            }
         }
 
-        drawList.Sort((a, b) => -a.mip.CompareTo(b.mip));
-        if (drawList.Count == 0) return;
+        _lookupTexture.Apply(false);
 
-        var mats = new Matrix4x4[drawList.Count];
-        var pageInfos = new Vector4[drawList.Count];
-        for (var i = 0; i < drawList.Count; i++)
-        {
-            var size = drawList[i].rect.width / TableSize;
-            mats[i] = Matrix4x4.TRS(
-                new Vector3(drawList[i].rect.x / TableSize, drawList[i].rect.y / TableSize),
-                Quaternion.identity,
-                new Vector3(size, size, size));
-
-            pageInfos[i] = new Vector4(drawList[i].drawPos.x, drawList[i].drawPos.y, drawList[i].mip / 255f, 0);
-        }
-
-        Graphics.SetRenderTarget(m_LookupTexture);
-        var tempCB = new CommandBuffer();
-        var block = new MaterialPropertyBlock();
-        block.SetVectorArray(PageInfo, pageInfos);
-        block.SetMatrixArray(ImageMvp, mats);
-        tempCB.DrawMeshInstanced(mQuad, 0, drawLookupMat, 0, mats, mats.Length, block);
-        Graphics.ExecuteCommandBuffer(tempCB);
         UpdateDebugTexture();
     }
 
@@ -222,25 +153,25 @@ public class PageTable : MonoBehaviour
         if (mip > MaxMipLevel || mip < 0 || x < 0 || y < 0 || x >= TableSize || y >= TableSize)
             return null;
         // 找到当前页表
-        var page = m_PageTable[mip].Get(x, y);
+        var page = _pageTable[mip].Get(x, y);
         if (page == null) return null;
-        if (!page.Payload.IsReady)
+        if (!page.Data.IsReady)
         {
             LoadPage(x, y, page);
 
             // 向上找到最近的父节点
-            while (mip < MaxMipLevel && !page.Payload.IsReady)
+            while (mip < MaxMipLevel && !page.Data.IsReady)
             {
                 mip++;
-                page = m_PageTable[mip].Get(x, y);
+                page = _pageTable[mip].Get(x, y);
             }
         }
 
-        if (page.Payload.IsReady)
+        if (page.Data.IsReady)
         {
             // 激活对应的平铺贴图块
-            m_TileTexture.SetActive(page.Payload.TileIndex);
-            page.Payload.ActiveFrame = Time.frameCount;
+            _tileTexture.SetActive(page.Data.TileIndex);
+            page.Data.ActiveFrame = Time.frameCount;
             return page;
         }
 
@@ -254,71 +185,75 @@ public class PageTable : MonoBehaviour
             return;
 
         // 正在加载中,不需要重复请求
-        if (node.Payload.LoadRequest != null)
+        if (node.Data.LoadRequest != null)
             return;
 
         // 新建加载请求
-        node.Payload.LoadRequest = m_RenderTask.Request(x, y, node.MipLevel);
+        node.Data.LoadRequest = _renderTask.Request(x, y, node.MipLevel);
     }
 
-    // 开始渲染
-    private void OnRenderJob(RenderTextureRequest request)
+    public void UpdatePage(Vector2Int center)
     {
-        // 找到对应页表
-        var node = m_PageTable[request.MipLevel].Get(request.PageX, request.PageY);
-        if (node == null || node.Payload.LoadRequest != request)
-            return;
+        for (var i = 0; i < TableSize; i++)
+        for (var j = 0; j < TableSize; j++)
+        {
+            var thisPos = new Vector2Int(i, j);
+            var distance = thisPos - center;
+            var absX = Mathf.Abs(distance.x);
+            var absY = Mathf.Abs(distance.y);
+            var absMax = Mathf.Max(absX, absY);
+            var tempMipLevel = (int)Mathf.Floor(Mathf.Sqrt(2 * absMax));
+            tempMipLevel = Mathf.Clamp(tempMipLevel, 0, MaxMipLevel);
+            ActivatePage(i, j, tempMipLevel);
+        }
 
-        node.Payload.LoadRequest = null;
-
-        var id = m_TileTexture.RequestTile();
-        m_TileTexture.UpdateTile(id, request);
-
-        node.Payload.TileIndex = id;
-        m_ActivePages[id] = node;
+        UpdateLookup();
     }
 
-    // 取消渲染
-    private void OnRenderJobCancel(RenderTextureRequest request)
+    private void OnRenderTask(RenderTextureRequest request)
     {
-        // 找到对应页表
-        var node = m_PageTable[request.MipLevel].Get(request.PageX, request.PageY);
-        if (node == null || node.Payload.LoadRequest != request)
+        var node = _pageTable[request.MipLevel].Get(request.PageX, request.PageY);
+        if (node == null || node.Data.LoadRequest != request)
             return;
 
-        node.Payload.LoadRequest = null;
+        node.Data.LoadRequest = null;
+
+        var id = _tileTexture.RequestTile();
+        _tileTexture.UpdateTile(id, request);
+
+        node.Data.TileIndex = id;
+        _activePages[id] = node;
+    }
+
+    private void OnRenderTaskCancel(RenderTextureRequest request)
+    {
+        var node = _pageTable[request.MipLevel].Get(request.PageX, request.PageY);
+        if (node == null || node.Data.LoadRequest != request)
+            return;
+
+        node.Data.LoadRequest = null;
     }
 
     // 将页表置为非活跃状态
     private void InvalidatePage(Vector2Int id)
     {
-        if (!m_ActivePages.TryGetValue(id, out var node))
+        if (!_activePages.TryGetValue(id, out var node))
             return;
 
-        node.Payload.ResetTileIndex();
-        m_ActivePages.Remove(id);
-    }
-
-    private void InitDebugTexture(int w, int h)
-    {
-#if UNITY_EDITOR
-        DebugTexture = new RenderTexture(w, h, 0);
-        DebugTexture.wrapMode = TextureWrapMode.Clamp;
-        DebugTexture.filterMode = FilterMode.Point;
-#endif
+        node.Data.ResetTileIndex();
+        _activePages.Remove(id);
     }
 
     private void UpdateDebugTexture()
     {
 #if UNITY_EDITOR
-        if (m_LookupTexture == null || m_DebugShader == null)
+        if (_lookupTexture == null || debugShader == null)
             return;
 
-        if (m_DebugMaterial == null)
-            m_DebugMaterial = new Material(m_DebugShader);
+        if (_debugMaterial == null)
+            _debugMaterial = new Material(debugShader);
 
-        DebugTexture.DiscardContents();
-        Graphics.Blit(m_LookupTexture, DebugTexture, m_DebugMaterial);
+        Graphics.Blit(_lookupTexture, DebugTexture, _debugMaterial);
 #endif
     }
 

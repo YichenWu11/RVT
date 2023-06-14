@@ -159,12 +159,12 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _BlendTile: {r: 0.0040283203, g: 0.0040283203, b: 0.74993896, a: 0.3319702}
+    - _BlendTile: {r: 0.869751, g: 0.50354004, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _TileOffset1: {r: 0.4125, g: 0.4125, b: 76.793755, a: 33.99375}
-    - _TileOffset2: {r: 0.4125, g: 0.4125, b: 76.793755, a: 33.99375}
-    - _TileOffset3: {r: 0.4125, g: 0.4125, b: 76.793755, a: 33.99375}
-    - _TileOffset4: {r: 0.4125, g: 0.4125, b: 76.793755, a: 33.99375}
+    - _TileOffset1: {r: 89.0625, g: 51.5625, b: 0, a: 0}
+    - _TileOffset2: {r: 89.0625, g: 51.5625, b: 0, a: 0}
+    - _TileOffset3: {r: 89.0625, g: 51.5625, b: 0, a: 0}
+    - _TileOffset4: {r: 89.0625, g: 51.5625, b: 0, a: 0}
   m_BuildTextureStacks: []
