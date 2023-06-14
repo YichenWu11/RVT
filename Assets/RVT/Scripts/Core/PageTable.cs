@@ -52,7 +52,7 @@ public class PageTable : MonoBehaviour
         _renderTask.StartRenderTask += OnRenderTask;
         _renderTask.CancelRenderTask += OnRenderTaskCancel;
 
-        _lookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false)
+        _lookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, true)
         {
             filterMode = FilterMode.Point,
             wrapMode = TextureWrapMode.Clamp
@@ -109,9 +109,11 @@ public class PageTable : MonoBehaviour
     // 处理回读
     private void ProcessFeedback(Texture2D texture)
     {
+        Debug.Log(texture.GetPixel(0, 0).b * 255.0f);
+
         // 激活对应页表
-        foreach (var color in texture.GetRawTextureData<Color32>())
-            ActivatePage(color.r, color.g, color.b);
+        // foreach (var color in texture.GetRawTextureData<Color32>())
+        // ActivatePage(color.r, color.g, color.b);
 
         UpdateLookup();
     }
@@ -129,16 +131,14 @@ public class PageTable : MonoBehaviour
             if (page.Data.ActiveFrame != Time.frameCount)
                 continue;
 
-            // a位保存写入frame序号，用于检查pixels是否为当前帧写入的数据(避免旧数据残留)
-            var c = new Color32((byte)page.Data.TileIndex.x, (byte)page.Data.TileIndex.y, (byte)page.MipLevel,
+            var color = new Color32((byte)page.Data.TileIndex.x, (byte)page.Data.TileIndex.y, (byte)page.MipLevel,
                 currentFrame);
             for (var y = page.Rect.y; y < page.Rect.yMax; y++)
             for (var x = page.Rect.x; x < page.Rect.xMax; x++)
             {
                 var id = y * TableSize + x;
-                if (pixels[id].b > c.b || // 写入mipmap等级最小的页表
-                    pixels[id].a != currentFrame) // 当前帧还没有写入过数据
-                    pixels[id] = c;
+                if (pixels[id].b > color.b || pixels[id].a != currentFrame)
+                    pixels[id] = color;
             }
         }
 
@@ -152,6 +152,7 @@ public class PageTable : MonoBehaviour
     {
         if (mip > MaxMipLevel || mip < 0 || x < 0 || y < 0 || x >= TableSize || y >= TableSize)
             return null;
+
         // 找到当前页表
         var page = _pageTable[mip].Get(x, y);
         if (page == null) return null;

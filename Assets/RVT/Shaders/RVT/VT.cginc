@@ -86,7 +86,7 @@ float4 VTTex2D(float2 uv)
 float VTGetMipLevel(float2 uv)
 {
     float4 page = tex2D(_VTLookupTex, uv);
-    return page.z * 255;
+    return page.z * 255.0f;
 }
 
 float4 VTGetMipmapLevelColor(float mip)
@@ -111,7 +111,7 @@ float4 VTGetMipmapLevelColor(float mip)
 
 float4 VTDebugMipmapLevel(sampler2D tex, float2 uv) : SV_Target
 {
-    return VTGetMipmapLevelColor(tex2D(tex, uv).z * 255);
+    return VTGetMipmapLevelColor(tex2D(tex, uv).z * 255.0f);
 }
 
 #endif

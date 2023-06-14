@@ -23,8 +23,7 @@
 
 			float4 frag(VTV2f i) : SV_Target
 			{
-				// return VTDebugMipmapLevel(_MainTex, i.uv);
-				return float4(tex2D(_MainTex, i.uv).rgb, 1.0f);
+				return VTDebugMipmapLevel(_MainTex, i.uv);
 			}
 			ENDHLSL
 		}

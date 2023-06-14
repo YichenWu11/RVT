@@ -99,7 +99,7 @@ public class FeedbackReader : MonoBehaviour
 #endif
         }
 
-        // 异步回读请求
+        // 发起异步回读请求
         m_ReadbackRequest = AsyncGPUReadback.Request(texture);
     }
 

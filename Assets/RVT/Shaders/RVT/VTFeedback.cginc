@@ -68,10 +68,9 @@ float4 VTFragFeedback(feedback_v2f i) : SV_Target
     float2 uv = i.uv * _VTFeedbackParam.y;
     float2 dx = ddx(uv);
     float2 dy = ddy(uv);
-    int mipmap_level = clamp(int(0.5 * log2(max(dot(dx, dx), dot(dy, dy))) + 0.5 + _VTFeedbackParam.w), 0,
-                             _VTFeedbackParam.z); // _VTFeedbackParam.z : mipmapBias
+    int mip = clamp(int(0.5 * log2(max(dot(dx, dx), dot(dy, dy))) + 0.5 + _VTFeedbackParam.w), 0, _VTFeedbackParam.z);
 
-    return float4(page / 255.0, mipmap_level / 255.0, 1.0f);
+    return float4(page / 255.0f, 1.0f / 255.0f, 1.0f);
 }
 
 /*
