@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 
 // 负责将预渲染 RT从 GPU 回读到 CPU
@@ -91,7 +92,7 @@ public class FeedbackReader : MonoBehaviour
             };
 
 #if UNITY_EDITOR
-            DebugTexture = new RenderTexture(width, height, 0)
+            DebugTexture = new RenderTexture(width, height, 0, GraphicsFormat.R8G8B8A8_UNorm)
             {
                 filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Clamp
@@ -99,17 +100,20 @@ public class FeedbackReader : MonoBehaviour
 #endif
         }
 
-        // 发起异步回读请求
+        // 异步回读请求
         m_ReadbackRequest = AsyncGPUReadback.Request(texture);
     }
 
-    // 检测回读请求状态
     public void UpdateRequest()
     {
         if (m_ReadbackRequest is { done: true, hasError: false })
         {
-            // 更新数据并分发事件
-            m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(m_ReadbackRequest.GetData<Color32>());
+            var colors = m_ReadbackRequest.GetData<Color32>();
+            m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(colors);
+
+            var color2 = m_ReadbackTexture.GetPixels();
+
+
             // 把在 CPU 端的更改同步到 GPU 端
             m_ReadbackTexture.Apply(false);
             OnFeedbackReadComplete?.Invoke(m_ReadbackTexture);
@@ -126,7 +130,8 @@ public class FeedbackReader : MonoBehaviour
         if (m_DebugMaterial == null)
             m_DebugMaterial = new Material(m_DebugShader);
 
-        Graphics.Blit(m_ReadbackTexture, DebugTexture, m_DebugMaterial);
+        Graphics.Blit(m_ReadbackTexture, DebugTexture);
+        //Graphics.Blit(m_ReadbackTexture, DebugTexture, m_DebugMaterial);
 #endif
     }
 }

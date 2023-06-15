@@ -17,7 +17,7 @@ public class PageTable : MonoBehaviour
     [SerializeField] private Shader drawLookupShader;
 
     // 当前活跃的页表
-    private readonly Dictionary<Vector2Int, TableNodeCell> _activePages = new();
+    private readonly Dictionary<Vector2Int, PageLevelTableNode> _activePages = new();
 
     private Material _debugMaterial;
 
@@ -109,7 +109,8 @@ public class PageTable : MonoBehaviour
     // 处理回读
     private void ProcessFeedback(Texture2D texture)
     {
-        Debug.Log(texture.GetPixel(0, 0).b * 255.0f);
+        Debug.Log(texture.GetRawTextureData<Color32>()[0]);
+        // Debug.Log(texture.GetPixel(0, 0));
 
         // 激活对应页表
         // foreach (var color in texture.GetRawTextureData<Color32>())
@@ -148,7 +149,7 @@ public class PageTable : MonoBehaviour
     }
 
     // 激活页表
-    private TableNodeCell ActivatePage(int x, int y, int mip)
+    private PageLevelTableNode ActivatePage(int x, int y, int mip)
     {
         if (mip > MaxMipLevel || mip < 0 || x < 0 || y < 0 || x >= TableSize || y >= TableSize)
             return null;
@@ -180,7 +181,7 @@ public class PageTable : MonoBehaviour
     }
 
     // 加载页表
-    private void LoadPage(int x, int y, TableNodeCell node)
+    private void LoadPage(int x, int y, PageLevelTableNode node)
     {
         if (node == null)
             return;

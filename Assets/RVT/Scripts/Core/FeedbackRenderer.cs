@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 public class FeedbackRenderer : MonoBehaviour
 {
@@ -38,7 +39,7 @@ public class FeedbackRenderer : MonoBehaviour
         var height = (int)(mainCamera.pixelHeight * scaleF);
         if (TargetTexture == null || TargetTexture.width != width || TargetTexture.height != height)
         {
-            TargetTexture = new RenderTexture(width, height, 0)
+            TargetTexture = new RenderTexture(width, height, 0, GraphicsFormat.R8G8B8A8_UNorm)
             {
                 useMipMap = false,
                 wrapMode = TextureWrapMode.Clamp,

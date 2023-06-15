@@ -136,7 +136,6 @@ GameObject:
   - component: {fileID: 292535968}
   - component: {fileID: 292535972}
   - component: {fileID: 292535971}
-  - component: {fileID: 292535973}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -284,21 +283,6 @@ MonoBehaviour:
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
   m_Version: 2
---- !u!114 &292535973
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 292535967}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517549ca763be8647b4da189f7555add, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  width: 1024
-  length: 1024
-  minCellSize: 64
 --- !u!1 &319696040
 GameObject:
   m_ObjectHideFlags: 0
@@ -600,7 +584,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69c9ba4aea1a3274aa6358ed56cf852a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tableSize: 64
+  tableSize: 128
   debugShader: {fileID: 4800000, guid: 3e5cbdff1f11566449b9744ec1ea6789, type: 3}
   drawLookupShader: {fileID: 4800000, guid: faee5729eabf1424bb61a2a97f45d70f, type: 3}
 --- !u!1 &1042161576
@@ -674,7 +658,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1042161576}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -122.9, z: 0}
+  m_LocalPosition: {x: 0, y: -59.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

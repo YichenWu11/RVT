@@ -25,9 +25,9 @@ public class PageData
     }
 }
 
-public class TableNodeCell
+public class PageLevelTableNode
 {
-    public TableNodeCell(int x, int y, int width, int height, int mip)
+    public PageLevelTableNode(int x, int y, int width, int height, int mip)
     {
         Rect = new RectInt(x, y, width, height);
         MipLevel = mip;
@@ -48,7 +48,7 @@ public class TableNodeCell
 public class PageLevelTable
 {
     // 当前层级的 Cell 总数量
-    public int NodeCellCount;
+    public int CellCount;
 
     public Vector2Int pageOffset;
 
@@ -60,11 +60,11 @@ public class PageLevelTable
         pageOffset = Vector2Int.zero;
         MipLevel = mipLevel;
         PerCellSize = (int)Mathf.Pow(2, mipLevel);
-        NodeCellCount = tableSize / PerCellSize;
-        Cell = new TableNodeCell[NodeCellCount, NodeCellCount];
-        for (var i = 0; i < NodeCellCount; i++)
-        for (var j = 0; j < NodeCellCount; j++)
-            Cell[i, j] = new TableNodeCell(
+        CellCount = tableSize / PerCellSize;
+        Cell = new PageLevelTableNode[CellCount, CellCount];
+        for (var i = 0; i < CellCount; i++)
+        for (var j = 0; j < CellCount; j++)
+            Cell[i, j] = new PageLevelTableNode(
                 i * PerCellSize,
                 j * PerCellSize,
                 PerCellSize,
@@ -72,17 +72,17 @@ public class PageLevelTable
                 MipLevel);
     }
 
-    public TableNodeCell[,] Cell { get; set; }
+    public PageLevelTableNode[,] Cell { get; set; }
 
     private int MipLevel { get; }
 
     public void ChangeViewRect(Vector2Int offset, Action<Vector2Int> InvalidatePage)
     {
-        if (Mathf.Abs(offset.x) >= NodeCellCount || Mathf.Abs(offset.y) > NodeCellCount ||
+        if (Mathf.Abs(offset.x) >= CellCount || Mathf.Abs(offset.y) > CellCount ||
             offset.x % PerCellSize != 0 || offset.y % PerCellSize != 0)
         {
-            for (var i = 0; i < NodeCellCount; i++)
-            for (var j = 0; j < NodeCellCount; j++)
+            for (var i = 0; i < CellCount; i++)
+            for (var j = 0; j < CellCount; j++)
             {
                 var transXY = GetTransXY(i, j);
                 Cell[transXY.x, transXY.y].Data.LoadRequest = null;
@@ -100,7 +100,7 @@ public class PageLevelTable
 
         if (offset.x > 0)
             for (var i = 0; i < offset.x; i++)
-            for (var j = 0; j < NodeCellCount; j++)
+            for (var j = 0; j < CellCount; j++)
             {
                 var transXY = GetTransXY(i, j);
                 Cell[transXY.x, transXY.y].Data.LoadRequest = null;
@@ -108,16 +108,16 @@ public class PageLevelTable
             }
         else if (offset.x < 0)
             for (var i = 1; i <= -offset.x; i++)
-            for (var j = 0; j < NodeCellCount; j++)
+            for (var j = 0; j < CellCount; j++)
             {
-                var transXY = GetTransXY(NodeCellCount - i, j);
+                var transXY = GetTransXY(CellCount - i, j);
                 Cell[transXY.x, transXY.y].Data.LoadRequest = null;
                 InvalidatePage(Cell[transXY.x, transXY.y].Data.TileIndex);
             }
 
         if (offset.y > 0)
             for (var i = 0; i < offset.y; i++)
-            for (var j = 0; j < NodeCellCount; j++)
+            for (var j = 0; j < CellCount; j++)
             {
                 var transXY = GetTransXY(j, i);
                 Cell[transXY.x, transXY.y].Data.LoadRequest = null;
@@ -125,9 +125,9 @@ public class PageLevelTable
             }
         else if (offset.y < 0)
             for (var i = 1; i <= -offset.y; i++)
-            for (var j = 0; j < NodeCellCount; j++)
+            for (var j = 0; j < CellCount; j++)
             {
-                var transXY = GetTransXY(j, NodeCellCount - i);
+                var transXY = GetTransXY(j, CellCount - i);
                 Cell[transXY.x, transXY.y].Data.LoadRequest = null;
                 InvalidatePage(Cell[transXY.x, transXY.y].Data.TileIndex);
             }
@@ -135,20 +135,20 @@ public class PageLevelTable
         #endregion
 
         pageOffset += offset;
-        while (pageOffset.x < 0) pageOffset.x += NodeCellCount;
-        while (pageOffset.y < 0) pageOffset.y += NodeCellCount;
-        pageOffset.x %= NodeCellCount;
-        pageOffset.y %= NodeCellCount;
+        while (pageOffset.x < 0) pageOffset.x += CellCount;
+        while (pageOffset.y < 0) pageOffset.y += CellCount;
+        pageOffset.x %= CellCount;
+        pageOffset.y %= CellCount;
     }
 
     // 取x/y/mip完全一致的node，没有就返回null
-    public TableNodeCell Get(int x, int y)
+    public PageLevelTableNode Get(int x, int y)
     {
         x /= PerCellSize;
         y /= PerCellSize;
 
-        x = (x + pageOffset.x) % NodeCellCount;
-        y = (y + pageOffset.y) % NodeCellCount;
+        x = (x + pageOffset.x) % CellCount;
+        y = (y + pageOffset.y) % CellCount;
 
         return Cell[x, y];
     }
@@ -156,7 +156,7 @@ public class PageLevelTable
     private Vector2Int GetTransXY(int x, int y)
     {
         return new Vector2Int(
-            (x + pageOffset.x) % NodeCellCount,
-            (y + pageOffset.y) % NodeCellCount);
+            (x + pageOffset.x) % CellCount,
+            (y + pageOffset.y) % CellCount);
     }
 }
