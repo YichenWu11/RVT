@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering;
 
 public class PageTable : MonoBehaviour
 {
@@ -25,7 +26,7 @@ public class PageTable : MonoBehaviour
     private Material _drawLookupMaterial;
 
     // 导出的页表寻址贴图
-    private Texture2D _lookupTexture;
+    private RenderTexture _lookupTexture;
 
     // 页表层级结构
     private PageLevelTable[] _pageTable;
@@ -53,17 +54,17 @@ public class PageTable : MonoBehaviour
         _renderTask.StartRenderTask += OnRenderTask;
         _renderTask.CancelRenderTask += OnRenderTaskCancel;
 
-        _lookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false, true)
-        {
-            filterMode = FilterMode.Point,
-            wrapMode = TextureWrapMode.Clamp
-        };
-
-        // _lookupTexture = new RenderTexture(TableSize, TableSize, 0)
+        // _lookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false, true)
         // {
         //     filterMode = FilterMode.Point,
         //     wrapMode = TextureWrapMode.Clamp
         // };
+
+        _lookupTexture = new RenderTexture(TableSize, TableSize, 0, GraphicsFormat.R8G8B8A8_UNorm)
+        {
+            filterMode = FilterMode.Point,
+            wrapMode = TextureWrapMode.Clamp
+        };
 
         _pageTable = new PageLevelTable[MaxMipLevel + 1];
         for (var i = 0; i <= MaxMipLevel; i++) _pageTable[i] = new PageLevelTable(i, TableSize);
@@ -122,87 +123,87 @@ public class PageTable : MonoBehaviour
 
     private void UpdateLookup()
     {
-        var pixels = _lookupTexture.GetRawTextureData<Color32>();
-        // 将页表数据写入页表贴图
-        var currentFrame = (byte)Time.frameCount;
-        foreach (var kv in _activePages)
-        {
-            var page = kv.Value;
-
-            // 只写入当前帧活跃的页表
-            if (page.Data.ActiveFrame != Time.frameCount)
-                continue;
-
-            // a位保存写入frame序号，用于检查pixels是否为当前帧写入的数据(避免旧数据残留)
-            var c = new Color32((byte)page.Data.TileIndex.x, (byte)page.Data.TileIndex.y, (byte)page.MipLevel,
-                currentFrame);
-            for (var y = page.Rect.y; y < page.Rect.yMax; y++)
-            for (var x = page.Rect.x; x < page.Rect.xMax; x++)
-            {
-                var id = y * TableSize + x;
-                var curPixColor = _lookupTexture;
-                if (pixels[id].b > c.b || // 写入mipmap等级最小的页表
-                    pixels[id].a != currentFrame) // 当前帧还没有写入过数据
-                    pixels[id] = c;
-            }
-        }
-
-        _lookupTexture.Apply(false);
-
-        UpdateDebugTexture();
-
+        // var pixels = _lookupTexture.GetRawTextureData<Color32>();
         // // 将页表数据写入页表贴图
         // var currentFrame = (byte)Time.frameCount;
-        // var drawList = new List<DrawPageInfo>();
         // foreach (var kv in _activePages)
         // {
         //     var page = kv.Value;
+        //
         //     // 只写入当前帧活跃的页表
         //     if (page.Data.ActiveFrame != Time.frameCount)
         //         continue;
         //
-        //     var table = _pageTable[page.MipLevel];
-        //     var offset = table.pageOffset;
-        //     var perSize = table.PerCellSize;
-        //     var lb = new Vector2Int(page.Rect.xMin - offset.x * perSize,
-        //         page.Rect.yMin - offset.y * perSize);
-        //     while (lb.x < 0) lb.x += TableSize;
-        //     while (lb.y < 0) lb.y += TableSize;
-        //
-        //     drawList.Add(new DrawPageInfo
+        //     // a位保存写入frame序号，用于检查pixels是否为当前帧写入的数据(避免旧数据残留)
+        //     var c = new Color32((byte)page.Data.TileIndex.x, (byte)page.Data.TileIndex.y, (byte)page.MipLevel,
+        //         currentFrame);
+        //     for (var y = page.Rect.y; y < page.Rect.yMax; y++)
+        //     for (var x = page.Rect.x; x < page.Rect.xMax; x++)
         //     {
-        //         rect = new Rect(lb.x, lb.y, page.Rect.width, page.Rect.height),
-        //         mip = page.MipLevel,
-        //         drawPos = new Vector2((float)page.Data.TileIndex.x / 255,
-        //             (float)page.Data.TileIndex.y / 255)
-        //     });
+        //         var id = y * TableSize + x;
+        //         var curPixColor = _lookupTexture;
+        //         if (pixels[id].b > c.b || // 写入mipmap等级最小的页表
+        //             pixels[id].a != currentFrame) // 当前帧还没有写入过数据
+        //             pixels[id] = c;
+        //     }
         // }
         //
-        // drawList.Sort((a, b) => -a.mip.CompareTo(b.mip));
-        // if (drawList.Count == 0) return;
-        //
-        // var mats = new Matrix4x4[drawList.Count];
-        // var pageInfos = new Vector4[drawList.Count];
-        // for (var i = 0; i < drawList.Count; i++)
-        // {
-        //     var size = drawList[i].rect.width / TableSize;
-        //     mats[i] = Matrix4x4.TRS(
-        //         new Vector3(drawList[i].rect.x / TableSize, drawList[i].rect.y / TableSize),
-        //         Quaternion.identity,
-        //         new Vector3(size, size, size));
-        //
-        //     pageInfos[i] = new Vector4(drawList[i].drawPos.x, drawList[i].drawPos.y, drawList[i].mip / 255f, 0);
-        // }
-        //
-        // Graphics.SetRenderTarget(_lookupTexture);
-        // var tempCB = new CommandBuffer();
-        // var block = new MaterialPropertyBlock();
-        // block.SetVectorArray(PageInfo, pageInfos);
-        // block.SetMatrixArray(ImageMvp, mats);
-        // tempCB.DrawMeshInstanced(_quadMesh, 0, _drawLookupMaterial, 0, mats, mats.Length, block);
-        // Graphics.ExecuteCommandBuffer(tempCB);
+        // _lookupTexture.Apply(false);
         //
         // UpdateDebugTexture();
+
+        // 将页表数据写入页表贴图
+        var currentFrame = (byte)Time.frameCount;
+        var drawList = new List<DrawPageInfo>();
+        foreach (var kv in _activePages)
+        {
+            var page = kv.Value;
+            // 只写入当前帧活跃的页表
+            if (page.Data.ActiveFrame != Time.frameCount)
+                continue;
+
+            var table = _pageTable[page.MipLevel];
+            var offset = table.pageOffset;
+            var perSize = table.PerCellSize;
+            var lb = new Vector2Int(page.Rect.xMin - offset.x * perSize,
+                page.Rect.yMin - offset.y * perSize);
+            while (lb.x < 0) lb.x += TableSize;
+            while (lb.y < 0) lb.y += TableSize;
+
+            drawList.Add(new DrawPageInfo
+            {
+                rect = new Rect(lb.x, lb.y, page.Rect.width, page.Rect.height),
+                mip = page.MipLevel,
+                drawPos = new Vector2((float)page.Data.TileIndex.x / 255,
+                    (float)page.Data.TileIndex.y / 255)
+            });
+        }
+
+        drawList.Sort((a, b) => -a.mip.CompareTo(b.mip));
+        if (drawList.Count == 0) return;
+
+        var mats = new Matrix4x4[drawList.Count];
+        var pageInfos = new Vector4[drawList.Count];
+        for (var i = 0; i < drawList.Count; i++)
+        {
+            var size = drawList[i].rect.width / TableSize;
+            mats[i] = Matrix4x4.TRS(
+                new Vector3(drawList[i].rect.x / TableSize, drawList[i].rect.y / TableSize),
+                Quaternion.identity,
+                new Vector3(size, size, size));
+
+            pageInfos[i] = new Vector4(drawList[i].drawPos.x, drawList[i].drawPos.y, drawList[i].mip / 255f, 0);
+        }
+
+        Graphics.SetRenderTarget(_lookupTexture);
+        var tempCB = new CommandBuffer();
+        var block = new MaterialPropertyBlock();
+        block.SetVectorArray(PageInfo, pageInfos);
+        block.SetMatrixArray(ImageMvp, mats);
+        tempCB.DrawMeshInstanced(_quadMesh, 0, _drawLookupMaterial, 0, mats, mats.Length, block);
+        Graphics.ExecuteCommandBuffer(tempCB);
+
+        UpdateDebugTexture();
     }
 
     // 激活页表

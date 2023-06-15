@@ -13,8 +13,13 @@ public class TiledTexture : MonoBehaviour
     // 单个Tile的尺寸.
     [SerializeField] private int tileSize = 256;
 
+    // 填充
+    [SerializeField] private int boundSize = 4;
+
     // Tile 缓存池
     private readonly LruCache _tilePool = new();
+
+    public int TileSizeWithBound => TileSize + boundSize * 2;
 
     public RenderTexture[] VTRTs { get; private set; }
 
@@ -23,6 +28,8 @@ public class TiledTexture : MonoBehaviour
 
     // 单个Tile的尺寸
     public int TileSize => tileSize;
+
+    public int BoundSize => boundSize;
 
     // Tile 更新完成的事件回调
     public event Action<Vector2Int> OnTileUpdateComplete;
@@ -35,14 +42,14 @@ public class TiledTexture : MonoBehaviour
         _tilePool.Init(RegionSize.x * RegionSize.y);
 
         VTRTs = new RenderTexture[2];
-        VTRTs[0] = new RenderTexture(RegionSize.x * TileSize, RegionSize.y * TileSize, 0)
+        VTRTs[0] = new RenderTexture(RegionSize.x * TileSizeWithBound, RegionSize.y * TileSizeWithBound, 0)
         {
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp
         };
         Shader.SetGlobalTexture(VTDiffuse, VTRTs[0]);
 
-        VTRTs[1] = new RenderTexture(RegionSize.x * TileSize, RegionSize.y * TileSize, 0)
+        VTRTs[1] = new RenderTexture(RegionSize.x * TileSizeWithBound, RegionSize.y * TileSizeWithBound, 0)
         {
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp
@@ -56,10 +63,10 @@ public class TiledTexture : MonoBehaviour
         Shader.SetGlobalVector(
             VTTileParam,
             new Vector4(
-                0,
+                boundSize,
                 TileSize,
-                RegionSize.x * TileSize,
-                RegionSize.y * TileSize));
+                RegionSize.x * TileSizeWithBound,
+                RegionSize.y * TileSizeWithBound));
     }
 
     public Vector2Int RequestTile()
@@ -80,10 +87,10 @@ public class TiledTexture : MonoBehaviour
             return;
         DrawTexture?.Invoke(
             new RectInt(
-                tile.x * TileSize,
-                tile.y * TileSize,
-                TileSize,
-                TileSize),
+                tile.x * TileSizeWithBound,
+                tile.y * TileSizeWithBound,
+                TileSizeWithBound,
+                TileSizeWithBound),
             request);
         OnTileUpdateComplete?.Invoke(tile);
     }

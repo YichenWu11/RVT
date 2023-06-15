@@ -136,8 +136,8 @@ public class RVTTerrain : MonoBehaviour
         var x = request.PageX;
         var y = request.PageY;
         var perSize = (int)Mathf.Pow(2, request.MipLevel);
-        x = x - x % perSize;
-        y = y - y % perSize;
+        x -= x % perSize;
+        y -= y % perSize;
         var tableSize = PageTable.TableSize;
         var paddingEffect = 0;
         var realRect = new Rect(RealTotalRect.xMin + (float)x / tableSize * RealTotalRect.width - paddingEffect,
@@ -215,14 +215,14 @@ public class RVTTerrain : MonoBehaviour
     private Vector2Int GetFixedCenter(Vector2Int pos)
     {
         return new Vector2Int(
-            (int)Mathf.Floor(pos.x / _viewDistance) * (int)_viewDistance,
-            (int)Mathf.Floor(pos.y / _viewDistance) * (int)_viewDistance);
+            (int)Mathf.Floor(pos.x / _viewDistance + 0.5f) * (int)_viewDistance,
+            (int)Mathf.Floor(pos.y / _viewDistance + 0.5f) * (int)_viewDistance);
     }
 
     private Vector2Int GetFixedPos(Vector3 pos)
     {
         return new Vector2Int(
-            (int)Mathf.Floor(pos.x / CellSize) * (int)CellSize,
-            (int)Mathf.Floor(pos.z / CellSize) * (int)CellSize);
+            (int)Mathf.Floor(pos.x / CellSize + 0.5f) * (int)CellSize,
+            (int)Mathf.Floor(pos.z / CellSize + 0.5f) * (int)CellSize);
     }
 }

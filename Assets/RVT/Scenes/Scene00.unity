@@ -467,6 +467,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   regionSize: {x: 10, y: 10}
   tileSize: 256
+  boundSize: 0
 --- !u!114 &982010932
 MonoBehaviour:
   m_ObjectHideFlags: 0
