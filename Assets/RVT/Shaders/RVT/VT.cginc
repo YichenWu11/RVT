@@ -83,12 +83,6 @@ float4 VTTex2D(float2 uv)
 }
 
 // FOR DEBUG
-float VTGetMipLevel(float2 uv)
-{
-    float4 page = tex2D(_VTLookupTex, uv);
-    return page.z * 255.0f;
-}
-
 float4 VTGetMipmapLevelColor(float mip)
 {
     const float4 colors[12] = {

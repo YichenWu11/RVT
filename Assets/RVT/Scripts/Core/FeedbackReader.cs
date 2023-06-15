@@ -63,7 +63,7 @@ public class FeedbackReader : MonoBehaviour
     public event Action<Texture2D> OnFeedbackReadComplete;
 
     // 发起回读请求
-    public void ReadbackRequest(RenderTexture texture)
+    public void ReadbackRequest(RenderTexture texture, bool forceWait = false)
     {
         if (m_ReadbackRequest is { done: false, hasError: false })
             return;
@@ -76,7 +76,7 @@ public class FeedbackReader : MonoBehaviour
         if (m_ReadbackScale != ScaleFactor.One)
         {
             if (m_DownScaleTexture == null || m_DownScaleTexture.width != width || m_DownScaleTexture.height != height)
-                m_DownScaleTexture = new RenderTexture(width, height, 0);
+                m_DownScaleTexture = new RenderTexture(width, height, 0, GraphicsFormat.R8G8B8A8_UNorm);
 
             Graphics.Blit(texture, m_DownScaleTexture, m_DownScaleMaterial, m_DownScaleMaterialPass);
             texture = m_DownScaleTexture;
@@ -85,7 +85,7 @@ public class FeedbackReader : MonoBehaviour
         // 贴图尺寸检测
         if (m_ReadbackTexture == null || m_ReadbackTexture.width != width || m_ReadbackTexture.height != height)
         {
-            m_ReadbackTexture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+            m_ReadbackTexture = new Texture2D(width, height, TextureFormat.RGBA32, false, true)
             {
                 filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Clamp
@@ -102,6 +102,8 @@ public class FeedbackReader : MonoBehaviour
 
         // 异步回读请求
         m_ReadbackRequest = AsyncGPUReadback.Request(texture);
+
+        if (forceWait) m_ReadbackRequest.WaitForCompletion();
     }
 
     public void UpdateRequest()
@@ -110,9 +112,6 @@ public class FeedbackReader : MonoBehaviour
         {
             var colors = m_ReadbackRequest.GetData<Color32>();
             m_ReadbackTexture.GetRawTextureData<Color32>().CopyFrom(colors);
-
-            var color2 = m_ReadbackTexture.GetPixels();
-
 
             // 把在 CPU 端的更改同步到 GPU 端
             m_ReadbackTexture.Apply(false);
@@ -130,8 +129,7 @@ public class FeedbackReader : MonoBehaviour
         if (m_DebugMaterial == null)
             m_DebugMaterial = new Material(m_DebugShader);
 
-        Graphics.Blit(m_ReadbackTexture, DebugTexture);
-        //Graphics.Blit(m_ReadbackTexture, DebugTexture, m_DebugMaterial);
+        Graphics.Blit(m_ReadbackTexture, DebugTexture, m_DebugMaterial);
 #endif
     }
 }

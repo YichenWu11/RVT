@@ -23,7 +23,7 @@ public class RenderTextureRequest
 public class RenderTask
 {
     // 一帧最多处理几个
-    private readonly int _limit = 2;
+    private readonly int _limit = 5;
 
     // 等待处理的请求.
     private readonly List<RenderTextureRequest> _pendingRequests = new();

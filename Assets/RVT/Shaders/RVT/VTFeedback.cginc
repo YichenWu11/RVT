@@ -70,8 +70,8 @@ float4 VTFragFeedback(feedback_v2f i) : SV_Target
     float2 dy = ddy(uv);
     int mip = clamp(int(0.5 * log2(max(dot(dx, dx), dot(dy, dy))) + 0.5 + _VTFeedbackParam.w), 0, _VTFeedbackParam.z);
 
-    return float4(float2(1, 2) / 255.0f, 128 / 255.0f, 4.0f / 255.0f);
-    // return float4(page / 255.0f, mip / 255.0f, 1.0f);
+    return float4(page / 255.0f, mip / 255.0f, 1.0f);
+    // return float4(page / 255.0f, 12.0f / 255.0f, 1.0f);
 }
 
 /*

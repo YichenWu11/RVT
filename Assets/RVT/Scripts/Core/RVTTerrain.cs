@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class RVTTerrain : MonoBehaviour
 {
@@ -19,9 +20,6 @@ public class RVTTerrain : MonoBehaviour
 
     [HideInInspector] public PageTable PageTable;
 
-    // From TiledTexture
-    private RenderBuffer _depthBuffer;
-
     // Feedback Pass Renderer & Reader
     private FeedbackReader _feedbackReader;
     private FeedbackRenderer _feedbackRenderer;
@@ -40,6 +38,9 @@ public class RVTTerrain : MonoBehaviour
 
     // 可视距离
     private float _viewDistance;
+
+    // From TiledTexture
+    private RenderBuffer VTDepthBuffer;
     private RenderBuffer[] VTTileBuffer;
 
 
@@ -72,7 +73,7 @@ public class RVTTerrain : MonoBehaviour
 
         _tiledTexture = GetComponent<TiledTexture>();
         _tiledTexture.Init();
-        // _tiledTexture.DrawTexture += DrawTexture; // 画 Tile 的事件
+        _tiledTexture.DrawTexture += DrawTexture; // 画 Tile 的事件
 
         PageTable.Init(_renderTask, _tiledTexture.RegionSize.x * _tiledTexture.RegionSize.y);
 
@@ -81,7 +82,7 @@ public class RVTTerrain : MonoBehaviour
         VTTileBuffer = new RenderBuffer[2];
         VTTileBuffer[0] = _tiledTexture.VTRTs[0].colorBuffer;
         VTTileBuffer[1] = _tiledTexture.VTRTs[1].colorBuffer;
-        _depthBuffer = _tiledTexture.VTRTs[0].depthBuffer;
+        VTDepthBuffer = _tiledTexture.VTRTs[0].depthBuffer;
         _tiledTextureSize = new Vector2Int(_tiledTexture.VTRTs[0].width, _tiledTexture.VTRTs[0].height);
     }
 
@@ -110,13 +111,105 @@ public class RVTTerrain : MonoBehaviour
                     2 * ViewRadius);
                 PageTable.ChangeViewRect((fixedCenter - oldCenter) / (2 * (int)ViewRadius / PageTable.TableSize));
 
+                _feedbackRenderer.FeedbackCamera.Render();
+                _feedbackReader.ReadbackRequest(_feedbackRenderer.TargetTexture, true);
+                _feedbackReader.UpdateRequest();
+                _renderTask.Update();
+                _feedbackReader.UpdateRequest();
+
                 return;
             }
         }
 
         _feedbackReader.UpdateRequest();
-        _feedbackRenderer.FeedbackCamera.Render();
-        _feedbackReader.ReadbackRequest(_feedbackRenderer.TargetTexture);
+        if (_feedbackReader.CanRead)
+        {
+            _feedbackRenderer.FeedbackCamera.Render();
+            _feedbackReader.ReadbackRequest(_feedbackRenderer.TargetTexture);
+        }
+
+        _renderTask.Update();
+    }
+
+    private void DrawTexture(RectInt drawPos, RenderTextureRequest request)
+    {
+        var x = request.PageX;
+        var y = request.PageY;
+        var perSize = (int)Mathf.Pow(2, request.MipLevel);
+        x = x - x % perSize;
+        y = y - y % perSize;
+        var tableSize = PageTable.TableSize;
+        var paddingEffect = 0;
+        var realRect = new Rect(RealTotalRect.xMin + (float)x / tableSize * RealTotalRect.width - paddingEffect,
+            RealTotalRect.yMin + (float)y / tableSize * RealTotalRect.height - paddingEffect,
+            RealTotalRect.width / tableSize * perSize + 2f * paddingEffect,
+            RealTotalRect.width / tableSize * perSize + 2f * paddingEffect);
+        var terRect = Rect.zero;
+        foreach (var ter in TerrainList)
+        {
+            if (!ter.isActiveAndEnabled) continue;
+            terRect.xMin = ter.transform.position.x;
+            terRect.yMin = ter.transform.position.z;
+            terRect.width = ter.terrainData.size.x;
+            terRect.height = ter.terrainData.size.z;
+            if (!realRect.Overlaps(terRect)) continue;
+            var needDrawRect = realRect;
+            needDrawRect.xMin = Mathf.Max(realRect.xMin, terRect.xMin);
+            needDrawRect.yMin = Mathf.Max(realRect.yMin, terRect.yMin);
+            needDrawRect.xMax = Mathf.Min(realRect.xMax, terRect.xMax);
+            needDrawRect.yMax = Mathf.Min(realRect.yMax, terRect.yMax);
+            var scaleFactor = drawPos.width / realRect.width;
+            var position = new Rect(drawPos.x + (needDrawRect.xMin - realRect.xMin) * scaleFactor,
+                drawPos.y + (needDrawRect.yMin - realRect.yMin) * scaleFactor,
+                needDrawRect.width * scaleFactor,
+                needDrawRect.height * scaleFactor);
+            var scaleOffset = new Vector4(
+                needDrawRect.width / terRect.width,
+                needDrawRect.height / terRect.height,
+                (needDrawRect.xMin - terRect.xMin) / terRect.width,
+                (needDrawRect.yMin - terRect.yMin) / terRect.height);
+            // 构建变换矩阵
+            var l = position.x * 2.0f / _tiledTextureSize.x - 1;
+            var r = (position.x + position.width) * 2.0f / _tiledTextureSize.x - 1;
+            var b = position.y * 2.0f / _tiledTextureSize.y - 1;
+            var t = (position.y + position.height) * 2.0f / _tiledTextureSize.y - 1;
+            var mat = new Matrix4x4
+            {
+                m00 = r - l,
+                m03 = l,
+                m11 = t - b,
+                m13 = b,
+                m23 = -1,
+                m33 = 1
+            };
+
+            // 绘制贴图
+            Graphics.SetRenderTarget(VTTileBuffer, VTDepthBuffer);
+            DrawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"), GL.GetGPUProjectionMatrix(mat, true));
+            DrawTextureMaterial.SetVector(BlendTile, scaleOffset);
+            var layerIndex = 0;
+            foreach (var alphamap in ter.terrainData.alphamapTextures)
+            {
+                DrawTextureMaterial.SetTexture(Blend, alphamap);
+                var index = 1;
+                for (; layerIndex < ter.terrainData.terrainLayers.Length && index <= 4; layerIndex++)
+                {
+                    var layer = ter.terrainData.terrainLayers[layerIndex];
+                    var nowScale = new Vector2(ter.terrainData.size.x / layer.tileSize.x,
+                        ter.terrainData.size.z / layer.tileSize.y);
+                    var tileOffset = new Vector4(nowScale.x * scaleOffset.x,
+                        nowScale.y * scaleOffset.y, scaleOffset.z * nowScale.x, scaleOffset.w * nowScale.y);
+                    DrawTextureMaterial.SetVector($"_TileOffset{index}", tileOffset);
+                    DrawTextureMaterial.SetTexture($"_Diffuse{index}", layer.diffuseTexture);
+                    DrawTextureMaterial.SetTexture($"_Normal{index}", layer.normalMapTexture);
+                    index++;
+                }
+
+                var tempCB = new CommandBuffer();
+                tempCB.DrawMesh(_quadMesh, Matrix4x4.identity, DrawTextureMaterial, 0, layerIndex <= 4 ? 0 : 1);
+                Graphics.ExecuteCommandBuffer(tempCB); //DEBUG
+            }
+        }
     }
 
     private Vector2Int GetFixedCenter(Vector2Int pos)
