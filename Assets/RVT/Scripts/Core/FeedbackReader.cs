@@ -59,7 +59,7 @@ public class FeedbackReader : MonoBehaviour
         }
     }
 
-    // 回读完成的事件回调
+    // 回读完成的事件
     public event Action<Texture2D> OnFeedbackReadComplete;
 
     // 发起回读请求
@@ -72,7 +72,7 @@ public class FeedbackReader : MonoBehaviour
         var width = (int)(texture.width * m_ReadbackScale.ToFloat());
         var height = (int)(texture.height * m_ReadbackScale.ToFloat());
 
-        // 先进行缩放
+        // 缩放
         if (m_ReadbackScale != ScaleFactor.One)
         {
             if (m_DownScaleTexture == null || m_DownScaleTexture.width != width || m_DownScaleTexture.height != height)
@@ -82,7 +82,6 @@ public class FeedbackReader : MonoBehaviour
             texture = m_DownScaleTexture;
         }
 
-        // 贴图尺寸检测
         if (m_ReadbackTexture == null || m_ReadbackTexture.width != width || m_ReadbackTexture.height != height)
         {
             m_ReadbackTexture = new Texture2D(width, height, TextureFormat.RGBA32, false, true)

@@ -31,11 +31,11 @@ public class TiledTexture : MonoBehaviour
 
     public int BoundSize => boundSize;
 
-    // Tile 更新完成的事件回调
+    // Tile 更新完成的事件
     public event Action<Vector2Int> OnTileUpdateComplete;
 
     // 画 Tile 的事件
-    public event Action<RectInt, RenderTextureRequest> DrawTexture;
+    public event Action<RectInt, RenderRequest> DrawTexture;
 
     public void Init()
     {
@@ -76,12 +76,10 @@ public class TiledTexture : MonoBehaviour
 
     public bool SetActive(Vector2Int tile)
     {
-        var success = _tilePool.SetActive(PosToId(tile));
-
-        return success;
+        return _tilePool.SetActive(PosToId(tile));
     }
 
-    public void UpdateTile(Vector2Int tile, RenderTextureRequest request)
+    public void UpdateTile(Vector2Int tile, RenderRequest request)
     {
         if (!SetActive(tile))
             return;

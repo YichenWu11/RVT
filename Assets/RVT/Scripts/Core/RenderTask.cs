@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 
-public class RenderTextureRequest
+public class RenderRequest
 {
-    public RenderTextureRequest(int x, int y, int mip)
+    public RenderRequest(int x, int y, int mip)
     {
         PageX = x;
         PageY = y;
         MipLevel = mip;
     }
 
-    // 页表 X 坐标
+    // 页表 x 坐标
     public int PageX { get; }
 
-    // 页表 Y 坐标
+    // 页表 y 坐标
     public int PageY { get; }
 
     // mipmap 等级
@@ -22,17 +22,14 @@ public class RenderTextureRequest
 
 public class RenderTask
 {
-    // 一帧最多处理几个
+    // 每帧处理数量限制
     private readonly int _limit = 2;
 
-    // 等待处理的请求.
-    private readonly List<RenderTextureRequest> _pendingRequests = new();
+    // 等待处理的请求
+    private readonly List<RenderRequest> _pendingRequests = new();
 
-    // 渲染完成的事件回调.
-    public event Action<RenderTextureRequest> StartRenderTask;
-
-    // 渲染取消的事件回调.
-    public event Action<RenderTextureRequest> CancelRenderTask;
+    // 开始渲染的事件
+    public event Action<RenderRequest> StartRenderTask;
 
     public void Update()
     {
@@ -40,13 +37,12 @@ public class RenderTask
             return;
 
         // 优先处理 mipmap 等级高的请求
-        _pendingRequests.Sort((x, y) => -x.MipLevel.CompareTo(y.MipLevel));
+        _pendingRequests.Sort((lhs, rhs) => -lhs.MipLevel.CompareTo(rhs.MipLevel));
 
         var count = _limit;
         while (count > 0 && _pendingRequests.Count > 0)
         {
             count--;
-            // 将第一个请求从等待队列移到运行队列
             var request = _pendingRequests[0];
             _pendingRequests.RemoveAt(0);
 
@@ -55,25 +51,17 @@ public class RenderTask
         }
     }
 
-    // 新建渲染请求
-    public RenderTextureRequest Request(int x, int y, int mip)
+    // 渲染请求
+    public RenderRequest Request(int x, int y, int mip)
     {
         // 是否已经在请求队列中
         foreach (var r in _pendingRequests)
             if (r.PageX == x && r.PageY == y && r.MipLevel == mip)
                 return null;
 
-        // 加入待处理列表
-        var request = new RenderTextureRequest(x, y, mip);
+        var request = new RenderRequest(x, y, mip);
         _pendingRequests.Add(request);
 
         return request;
-    }
-
-    public void Clear()
-    {
-        foreach (var r in _pendingRequests) CancelRenderTask?.Invoke(r);
-
-        _pendingRequests.Clear();
     }
 }

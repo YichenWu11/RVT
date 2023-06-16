@@ -5,19 +5,15 @@ public class PageData
 {
     private static readonly Vector2Int SInvalidTileIndex = new(-1, -1);
 
-    // 激活的帧序号
     public int ActiveFrame;
 
-    // 渲染请求
-    public RenderTextureRequest LoadRequest;
+    public RenderRequest LoadRequest;
 
     // 对应 TiledTexture 中的 id
     public Vector2Int TileIndex = SInvalidTileIndex;
 
-    // 是否处于可用状态
     public bool IsReady => TileIndex != SInvalidTileIndex;
 
-    // 重置页表数据
     public void ResetTileIndex()
     {
         TileIndex = SInvalidTileIndex;
@@ -47,10 +43,10 @@ public class PageLevelTableNode
 public class PageLevelTable
 {
     // 当前层级的 Cell 总数量
-    public int CellCount;
+    private readonly int CellCount;
 
     // 每个 Cell 占据的尺寸
-    public int PerCellSize;
+    private readonly int PerCellSize;
 
     public PageLevelTable(int mipLevel, int tableSize)
     {
@@ -69,18 +65,13 @@ public class PageLevelTable
         // Debug.Log($"MipLevel {mipLevel} : {PerCellSize} {tableSize}");
     }
 
-    public PageLevelTableNode[,] Cell { get; }
+    private PageLevelTableNode[,] Cell { get; }
 
+    // Mip 层级
     private int MipLevel { get; }
 
     public PageLevelTableNode Get(int x, int y)
     {
-        x /= PerCellSize;
-        y /= PerCellSize;
-
-        x %= CellCount;
-        y %= CellCount;
-
-        return Cell[x, y];
+        return Cell[x / PerCellSize % CellCount, y / PerCellSize % CellCount];
     }
 }

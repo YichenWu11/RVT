@@ -36,18 +36,6 @@ sampler2D _VTNormal;
 
 float4 _VTRealRect;
 
-
-VTV2f VTVertFromPos(VTAppdata v)
-{
-    VTV2f o;
-
-    o.pos = TransformObjectToHClip(v.vertex.xyz);
-    float2 posW = TransformObjectToWorld(v.vertex).xz;
-    o.uv = (posW - _VTRealRect.xy) / _VTRealRect.zw;
-
-    return o;
-}
-
 VTV2f VTVert(VTAppdata v)
 {
     VTV2f o;
@@ -55,31 +43,6 @@ VTV2f VTVert(VTAppdata v)
     o.pos = TransformObjectToHClip(v.vertex.xyz);
     o.uv = v.texcoord;
     return o;
-}
-
-float2 VTTransferUV(float2 uv)
-{
-    float2 uvInt = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
-    float4 page = tex2D(_VTLookupTex, uvInt) * 255;
-    float2 inPageOffset = frac(uv * exp2(_VTPageParam.z - page.b));
-    return (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) + inPageOffset * _VTTileParam.y + _VTTileParam.x) /
-        _VTTileParam.zw;
-}
-
-float4 VTTex2DDiffuse(float2 uv)
-{
-    //return fixed4(uv, 0, 1);
-    return tex2D(_VTDiffuse, uv);
-}
-
-float4 VTTex2D1(float2 uv)
-{
-    return tex2D(_VTNormal, uv);
-}
-
-float4 VTTex2D(float2 uv)
-{
-    return VTTex2DDiffuse(uv);
 }
 
 // FOR DEBUG

@@ -9,24 +9,28 @@ public class RVTTerrain : MonoBehaviour
     private static readonly int BlendTile = Shader.PropertyToID("_BlendTile");
     private static readonly int Blend = Shader.PropertyToID("_Blend");
 
-    // 可视区域半径
-    public float ViewRadius = 500;
-
     // Terrain 列表
     public List<Terrain> TerrainList = new();
+
+    public int TotalWidth = 1024; // 区域总宽度
+    public int TotalLength = 1024; // 区域总长度
+    public Vector2 LeftDownCorner = new(0, 0); // 区域左下角世界坐标
 
     // 贴图绘制材质
     public Material DrawTextureMaterial;
 
+    // 页表
     [HideInInspector] public PageTable PageTable;
 
     // Feedback Pass Renderer & Reader
     private FeedbackReader _feedbackReader;
     private FeedbackRenderer _feedbackRenderer;
+
+    // helper mesh
     private Mesh _quadMesh;
 
-    // 可视区域 Rect
-    private Rect _realTotalRect;
+    // Terrain Region 占据的 Rect
+    private Rect _regionRect;
 
     private RenderTask _renderTask;
 
@@ -43,37 +47,24 @@ public class RVTTerrain : MonoBehaviour
     private RenderBuffer VTDepthBuffer;
     private RenderBuffer[] VTTileBuffer;
 
-
-    // 设置可视 Rect & 设置 Shader _VTRealRect 参数
-    public Rect RealTotalRect
-    {
-        get => _realTotalRect;
-        set
-        {
-            _realTotalRect = value;
-            Shader.SetGlobalVector(
-                VTRealRect,
-                new Vector4(_realTotalRect.xMin, _realTotalRect.yMin, _realTotalRect.width, _realTotalRect.height));
-        }
-    }
-
-    private float CellSize => 2 * ViewRadius / PageTable.TableSize;
-
     private void Start()
     {
         PageTable = GetComponent<PageTable>();
         _feedbackRenderer = GetComponent<FeedbackRenderer>();
         _feedbackReader = GetComponent<FeedbackReader>();
 
-        RealTotalRect = new Rect(0, 0, 1024, 1024);
+        _regionRect = new Rect(LeftDownCorner.x, LeftDownCorner.y, TotalWidth, TotalLength);
+        Shader.SetGlobalVector(
+            VTRealRect,
+            new Vector4(_regionRect.xMin, _regionRect.yMin, _regionRect.width, _regionRect.height));
 
         _renderTask = new RenderTask();
 
         _tiledTexture = GetComponent<TiledTexture>();
         _tiledTexture.Init();
-        _tiledTexture.DrawTexture += DrawTexture; // 画 Tile 的事件
+        _tiledTexture.DrawTexture += DrawTiledTexture;
 
-        PageTable.Init(_renderTask, _tiledTexture.RegionSize.x * _tiledTexture.RegionSize.y);
+        PageTable.Init(_renderTask);
 
         _quadMesh = Util.BuildQuadMesh();
 
@@ -96,44 +87,53 @@ public class RVTTerrain : MonoBehaviour
         _renderTask.Update();
     }
 
-    private void DrawTexture(RectInt drawPos, RenderTextureRequest request)
+    private void DrawTiledTexture(RectInt drawPos, RenderRequest request)
     {
         var x = request.PageX;
         var y = request.PageY;
-        var perSize = (int)Mathf.Pow(2, request.MipLevel);
-        x -= x % perSize;
-        y -= y % perSize;
-        var tableSize = PageTable.TableSize;
-        var paddingEffect = 0;
-        var realRect = new Rect(RealTotalRect.xMin + (float)x / tableSize * RealTotalRect.width - paddingEffect,
-            RealTotalRect.yMin + (float)y / tableSize * RealTotalRect.height - paddingEffect,
-            RealTotalRect.width / tableSize * perSize + 2f * paddingEffect,
-            RealTotalRect.width / tableSize * perSize + 2f * paddingEffect);
-        var terRect = Rect.zero;
-        foreach (var ter in TerrainList)
+        var perCellSize = (int)Mathf.Pow(2, request.MipLevel);
+
+        // 转换到对应 Mip 层级页表上的坐标
+        x -= x % perCellSize;
+        y -= y % perCellSize;
+
+        var boundOffset =
+            _tiledTexture.BoundSize * perCellSize * (_regionRect.width / PageTable.TableSize) /
+            _tiledTexture.TileSize;
+        var realRect = new Rect(
+            _regionRect.xMin + (float)x / PageTable.TableSize * _regionRect.width - boundOffset,
+            _regionRect.yMin + (float)y / PageTable.TableSize * _regionRect.height - boundOffset,
+            _regionRect.width / PageTable.TableSize * perCellSize + 2.0f * boundOffset,
+            _regionRect.width / PageTable.TableSize * perCellSize + 2.0f * boundOffset);
+        var terrainRect = Rect.zero;
+
+        foreach (var terrain in TerrainList)
         {
-            if (!ter.isActiveAndEnabled) continue;
-            terRect.xMin = ter.transform.position.x;
-            terRect.yMin = ter.transform.position.z;
-            terRect.width = ter.terrainData.size.x;
-            terRect.height = ter.terrainData.size.z;
-            if (!realRect.Overlaps(terRect)) continue;
+            terrainRect.xMin = terrain.transform.position.x;
+            terrainRect.yMin = terrain.transform.position.z;
+            terrainRect.width = terrain.terrainData.size.x;
+            terrainRect.height = terrain.terrainData.size.z;
+
+            if (!realRect.Overlaps(terrainRect))
+                continue;
+
             var needDrawRect = realRect;
-            needDrawRect.xMin = Mathf.Max(realRect.xMin, terRect.xMin);
-            needDrawRect.yMin = Mathf.Max(realRect.yMin, terRect.yMin);
-            needDrawRect.xMax = Mathf.Min(realRect.xMax, terRect.xMax);
-            needDrawRect.yMax = Mathf.Min(realRect.yMax, terRect.yMax);
+            needDrawRect.xMin = Mathf.Max(realRect.xMin, terrainRect.xMin);
+            needDrawRect.yMin = Mathf.Max(realRect.yMin, terrainRect.yMin);
+            needDrawRect.xMax = Mathf.Min(realRect.xMax, terrainRect.xMax);
+            needDrawRect.yMax = Mathf.Min(realRect.yMax, terrainRect.yMax);
+
             var scaleFactor = drawPos.width / realRect.width;
             var position = new Rect(drawPos.x + (needDrawRect.xMin - realRect.xMin) * scaleFactor,
                 drawPos.y + (needDrawRect.yMin - realRect.yMin) * scaleFactor,
                 needDrawRect.width * scaleFactor,
                 needDrawRect.height * scaleFactor);
             var scaleOffset = new Vector4(
-                needDrawRect.width / terRect.width,
-                needDrawRect.height / terRect.height,
-                (needDrawRect.xMin - terRect.xMin) / terRect.width,
-                (needDrawRect.yMin - terRect.yMin) / terRect.height);
-            // 构建变换矩阵
+                needDrawRect.width / terrainRect.width,
+                needDrawRect.height / terrainRect.height,
+                (needDrawRect.xMin - terrainRect.xMin) / terrainRect.width,
+                (needDrawRect.yMin - terrainRect.yMin) / terrainRect.height);
+
             var l = position.x * 2.0f / _tiledTextureSize.x - 1;
             var r = (position.x + position.width) * 2.0f / _tiledTextureSize.x - 1;
             var b = position.y * 2.0f / _tiledTextureSize.y - 1;
@@ -151,28 +151,29 @@ public class RVTTerrain : MonoBehaviour
             Graphics.SetRenderTarget(VTTileBuffer, VTDepthBuffer);
             DrawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"), GL.GetGPUProjectionMatrix(mat, true));
             DrawTextureMaterial.SetVector(BlendTile, scaleOffset);
-            var layerIndex = 0;
-            foreach (var alphamap in ter.terrainData.alphamapTextures)
-            {
-                DrawTextureMaterial.SetTexture(Blend, alphamap);
-                var index = 1;
-                for (; layerIndex < ter.terrainData.terrainLayers.Length && index <= 4; layerIndex++)
-                {
-                    var layer = ter.terrainData.terrainLayers[layerIndex];
-                    var nowScale = new Vector2(ter.terrainData.size.x / layer.tileSize.x,
-                        ter.terrainData.size.z / layer.tileSize.y);
-                    var tileOffset = new Vector4(nowScale.x * scaleOffset.x,
-                        nowScale.y * scaleOffset.y, scaleOffset.z * nowScale.x, scaleOffset.w * nowScale.y);
-                    DrawTextureMaterial.SetVector($"_TileOffset{index}", tileOffset);
-                    DrawTextureMaterial.SetTexture($"_Diffuse{index}", layer.diffuseTexture);
-                    DrawTextureMaterial.SetTexture($"_Normal{index}", layer.normalMapTexture);
-                    index++;
-                }
 
-                var tempCB = new CommandBuffer();
-                tempCB.DrawMesh(_quadMesh, Matrix4x4.identity, DrawTextureMaterial, 0, layerIndex <= 4 ? 0 : 1);
-                Graphics.ExecuteCommandBuffer(tempCB); //DEBUG
+            var alphamap = terrain.terrainData.alphamapTextures[0];
+            DrawTextureMaterial.SetTexture(Blend, alphamap);
+            for (var layerIndex = 0; layerIndex < terrain.terrainData.terrainLayers.Length; layerIndex++)
+            {
+                var terrainData = terrain.terrainData;
+                var layer = terrainData.terrainLayers[layerIndex];
+                var curScale = new Vector2(
+                    terrainData.size.x / layer.tileSize.x,
+                    terrainData.size.z / layer.tileSize.y);
+                var tileOffset = new Vector4(
+                    curScale.x * scaleOffset.x,
+                    curScale.y * scaleOffset.y,
+                    scaleOffset.z * curScale.x,
+                    scaleOffset.w * curScale.y);
+                DrawTextureMaterial.SetVector($"_TileOffset{layerIndex + 1}", tileOffset);
+                DrawTextureMaterial.SetTexture($"_Diffuse{layerIndex + 1}", layer.diffuseTexture);
+                DrawTextureMaterial.SetTexture($"_Normal{layerIndex + 1}", layer.normalMapTexture);
             }
+
+            var cmd = new CommandBuffer();
+            cmd.DrawMesh(_quadMesh, Matrix4x4.identity, DrawTextureMaterial, 0);
+            Graphics.ExecuteCommandBuffer(cmd);
         }
     }
 }

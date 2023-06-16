@@ -38,11 +38,10 @@ public class PageTable : MonoBehaviour
     // 最大mipmap等级
     public int MaxMipLevel => (int)Mathf.Log(TableSize, 2);
 
-    public void Init(RenderTask task, int tileCount)
+    public void Init(RenderTask task)
     {
         _renderTask = task;
         _renderTask.StartRenderTask += OnRenderTask;
-        _renderTask.CancelRenderTask += OnRenderTaskCancel;
 
         _lookupTexture = new Texture2D(TableSize, TableSize, TextureFormat.RGBA32, false, true)
         {
@@ -76,13 +75,13 @@ public class PageTable : MonoBehaviour
         _tileTexture = GetComponent<TiledTexture>();
         _tileTexture.OnTileUpdateComplete += InvalidatePage;
         GetComponent<FeedbackReader>().OnFeedbackReadComplete += ProcessFeedback;
-        ActivatePage(0, 0, MaxMipLevel);
     }
 
     // 处理回读
     private void ProcessFeedback(Texture2D texture)
     {
-        foreach (var color in texture.GetRawTextureData<Color32>()) ActivatePage(color.r, color.g, color.b);
+        foreach (var color in texture.GetRawTextureData<Color32>())
+            ActivatePage(color.r, color.g, color.b);
 
         UpdateLookup();
     }
@@ -100,17 +99,21 @@ public class PageTable : MonoBehaviour
             if (page.Data.ActiveFrame != Time.frameCount)
                 continue;
 
-            var c = new Color32((byte)page.Data.TileIndex.x, (byte)page.Data.TileIndex.y, (byte)page.MipLevel,
+            var color = new Color32(
+                (byte)page.Data.TileIndex.x,
+                (byte)page.Data.TileIndex.y,
+                (byte)page.MipLevel,
                 currentFrame);
             for (var y = page.Rect.y; y < page.Rect.yMax; y++)
             for (var x = page.Rect.x; x < page.Rect.xMax; x++)
             {
                 var id = y * TableSize + x;
-                if (pixels[id].b > c.b || pixels[id].a != currentFrame)
-                    pixels[id] = c;
+                if (pixels[id].b > color.b || pixels[id].a != currentFrame)
+                    pixels[id] = color;
             }
         }
 
+        // 将改动同步到 GPU 端
         _lookupTexture.Apply(false);
 
         UpdateDebugTexture();
@@ -150,15 +153,14 @@ public class PageTable : MonoBehaviour
         if (node == null)
             return;
 
-        // 正在加载中,不需要重复请求
         if (node.Data.LoadRequest != null)
             return;
 
-        // 新建加载请求
+        // 加载请求
         node.Data.LoadRequest = _renderTask.Request(x, y, node.MipLevel);
     }
 
-    private void OnRenderTask(RenderTextureRequest request)
+    private void OnRenderTask(RenderRequest request)
     {
         var node = _pageTable[request.MipLevel].Get(request.PageX, request.PageY);
         if (node == null || node.Data.LoadRequest != request)
@@ -171,15 +173,6 @@ public class PageTable : MonoBehaviour
 
         node.Data.TileIndex = id;
         _activePages[id] = node;
-    }
-
-    private void OnRenderTaskCancel(RenderTextureRequest request)
-    {
-        var node = _pageTable[request.MipLevel].Get(request.PageX, request.PageY);
-        if (node == null || node.Data.LoadRequest != request)
-            return;
-
-        node.Data.LoadRequest = null;
     }
 
     // 将页表置为非活跃状态

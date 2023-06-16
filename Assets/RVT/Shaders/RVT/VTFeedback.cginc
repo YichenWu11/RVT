@@ -56,7 +56,6 @@ feedback_v2f VTVertFeedback(appdata_feedback v)
 
     o.pos = Attributes.positionCS;
     float2 posW = Attributes.positionWS.xz;
-    // o.uv = (posW - _VTRealRect.xy) / _VTRealRect.zw;
     o.uv = v.texcoord;
 
     return o;

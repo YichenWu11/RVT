@@ -448,9 +448,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 642987e61803b0046865833f7ad0d21c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ViewRadius: 500
   TerrainList:
   - {fileID: 1042161578}
+  TotalWidth: 1024
+  TotalLength: 1024
+  LeftDownCorner: {x: 0, y: 0}
   DrawTextureMaterial: {fileID: 2100000, guid: 26be0d72645c0b945ad4cb40b55d5458, type: 2}
   PageTable: {fileID: 0}
 --- !u!114 &982010931
