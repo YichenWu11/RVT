@@ -17,6 +17,7 @@ struct Attributes
 
 struct Varyings
 {
+    float2 iniUV : TEXCOORD10;
     float4 uvMainAndLM : TEXCOORD0; // xy: control, zw: lightmap
     #ifndef TERRAIN_SPLAT_BASEPASS
     float4 uvSplat01 : TEXCOORD1; // xy: splat0, zw: splat1
@@ -24,9 +25,9 @@ struct Varyings
     #endif
 
     #if defined(_NORMALMAP) && !defined(ENABLE_TERRAIN_PERPIXEL_NORMAL)
-        half4 normal                    : TEXCOORD3;    // xyz: normal, w: viewDir.x
-        half4 tangent                   : TEXCOORD4;    // xyz: tangent, w: viewDir.y
-        half4 bitangent                 : TEXCOORD5;    // xyz: bitangent, w: viewDir.z
+    half4 normal : TEXCOORD3; // xyz: normal, w: viewDir.x
+    half4 tangent : TEXCOORD4; // xyz: tangent, w: viewDir.y
+    half4 bitangent : TEXCOORD5; // xyz: bitangent, w: viewDir.z
     #else
     half3 normal : TEXCOORD3;
     half3 vertexSH : TEXCOORD4; // SH
@@ -60,11 +61,11 @@ void InitializeInputData(Varyings IN, half3 normalTS, out InputData inputData)
     inputData.positionCS = IN.clipPos;
 
     #if defined(_NORMALMAP) && !defined(ENABLE_TERRAIN_PERPIXEL_NORMAL)
-        half3 viewDirWS = half3(IN.normal.w, IN.tangent.w, IN.bitangent.w);
-        inputData.tangentToWorld = half3x3(-IN.tangent.xyz, IN.bitangent.xyz, IN.normal.xyz);
-        inputData.normalWS = TransformTangentToWorld(normalTS, inputData.tangentToWorld);
-        // no need for vertex SH when _NORMALMAP is defined as we will evaluate SH per pixel
-        half3 SH = 0;
+    half3 viewDirWS = half3(IN.normal.w, IN.tangent.w, IN.bitangent.w);
+    inputData.tangentToWorld = half3x3(-IN.tangent.xyz, IN.bitangent.xyz, IN.normal.xyz);
+    inputData.normalWS = TransformTangentToWorld(normalTS, inputData.tangentToWorld);
+    // no need for vertex SH when _NORMALMAP is defined as we will evaluate SH per pixel
+    half3 SH = 0;
     #elif defined(ENABLE_TERRAIN_PERPIXEL_NORMAL)
         half3 viewDirWS = GetWorldSpaceNormalizeViewDir(IN.positionWS);
         float2 sampleCoords = (IN.uvMainAndLM.xy / _TerrainHeightmapRecipSize.zw + 0.5f) * _TerrainHeightmapRecipSize.xy;
@@ -121,20 +122,20 @@ void InitializeInputData(Varyings IN, half3 normalTS, out InputData inputData)
 void NormalMapMix(float4 uvSplat01, float4 uvSplat23, inout half4 splatControl, inout half3 mixedNormal)
 {
     #if defined(_NORMALMAP)
-        half3 nrm = half(0.0);
-        nrm += splatControl.r * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal0, sampler_Normal0, uvSplat01.xy), _NormalScale0);
-        nrm += splatControl.g * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal1, sampler_Normal0, uvSplat01.zw), _NormalScale1);
-        nrm += splatControl.b * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal2, sampler_Normal0, uvSplat23.xy), _NormalScale2);
-        nrm += splatControl.a * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal3, sampler_Normal0, uvSplat23.zw), _NormalScale3);
+    half3 nrm = half(0.0);
+    nrm += splatControl.r * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal0, sampler_Normal0, uvSplat01.xy), _NormalScale0);
+    nrm += splatControl.g * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal1, sampler_Normal0, uvSplat01.zw), _NormalScale1);
+    nrm += splatControl.b * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal2, sampler_Normal0, uvSplat23.xy), _NormalScale2);
+    nrm += splatControl.a * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal3, sampler_Normal0, uvSplat23.zw), _NormalScale3);
 
-        // avoid risk of NaN when normalizing.
+    // avoid risk of NaN when normalizing.
     #if HAS_HALF
             nrm.z += half(0.01);
     #else
-            nrm.z += 1e-5f;
+    nrm.z += 1e-5f;
     #endif
 
-        mixedNormal = normalize(nrm.xyz);
+    mixedNormal = normalize(nrm.xyz);
     #endif
 }
 
@@ -247,6 +248,8 @@ Varyings SplatmapVert(Attributes v)
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
     TerrainInstancing(v.positionOS, v.normalOS, v.texcoord);
 
+    o.iniUV = v.texcoord;
+
     VertexPositionInputs Attributes = GetVertexPositionInputs(v.positionOS.xyz);
 
     o.uvMainAndLM.xy = v.texcoord;
@@ -264,13 +267,13 @@ Varyings SplatmapVert(Attributes v)
     #endif
 
     #if defined(_NORMALMAP) && !defined(ENABLE_TERRAIN_PERPIXEL_NORMAL)
-        half3 viewDirWS = GetWorldSpaceNormalizeViewDir(Attributes.positionWS);
-        float4 vertexTangent = float4(cross(float3(0, 0, 1), v.normalOS), 1.0);
-        VertexNormalInputs normalInput = GetVertexNormalInputs(v.normalOS, vertexTangent);
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(Attributes.positionWS);
+    float4 vertexTangent = float4(cross(float3(0, 0, 1), v.normalOS), 1.0);
+    VertexNormalInputs normalInput = GetVertexNormalInputs(v.normalOS, vertexTangent);
 
-        o.normal = half4(normalInput.normalWS, viewDirWS.x);
-        o.tangent = half4(normalInput.tangentWS, viewDirWS.y);
-        o.bitangent = half4(normalInput.bitangentWS, viewDirWS.z);
+    o.normal = half4(normalInput.normalWS, viewDirWS.x);
+    o.tangent = half4(normalInput.tangentWS, viewDirWS.y);
+    o.bitangent = half4(normalInput.bitangentWS, viewDirWS.z);
     #else
     o.normal = TransformObjectToWorldNormal(v.normalOS);
     o.vertexSH = SampleSH(o.normal);
@@ -322,14 +325,12 @@ void ComputeMasks(out half4 masks[4], half4 hasMask, Varyings IN)
     masks[3] += _MaskMapRemapOffset3.rgba;
 }
 
-half4 GetRVTColor(Varyings IN)
+half4 ComputeRVTColor(Varyings IN)
 {
-    float2 uv = (IN.positionWS.xz - _VTRealRect.xy) / _VTRealRect.zw;
+    float2 uv = (IN.positionWS.xz) / 1024.0f;
+
     float2 uvInt = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
     float4 page = tex2D(_VTLookupTex, uvInt) * 255;
-    // #ifdef _SHOWRVTMIPMAP
-    // return float4(clamp(1 - page.b * 0.1, 0, 1), 0, 0, 1);
-    // #endif
     float2 inPageOffset = frac(uv * exp2(_VTPageParam.z - page.b));
     uv = (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) + inPageOffset * _VTTileParam.y + _VTTileParam.x) /
         _VTTileParam.zw;
@@ -345,7 +346,6 @@ half4 GetRVTColor(Varyings IN)
                                        occlusion, /* emission */ half3(0, 0, 0), alpha);
     SplatmapFinalColor(color, inputData.fogCoord);
 
-    // return half4(uvInt / 255.0h, 0.0h, 1.0h);
     return half4(color.rgb, 1.0h);
 }
 
@@ -358,8 +358,8 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
 {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
 
-    #ifdef _RVT
-    return GetRVTColor(IN);
+    #ifdef _USE_RVT_LIT
+    return ComputeRVTColor(IN);
     #endif
 
     #ifdef _ALPHATEST_ON
@@ -438,7 +438,8 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
     half4 color;
     Light mainLight = GetMainLight(inputData.shadowCoord, inputData.positionWS, inputData.shadowMask);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, inputData.shadowMask);
-    color.rgb = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.positionWS, inputData.normalWS, inputData.viewDirectionWS);
+    color.rgb = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.positionWS, inputData.normalWS,
+                                   inputData.viewDirectionWS);
     color.a = alpha;
     SplatmapFinalColor(color, inputData.fogCoord);
 

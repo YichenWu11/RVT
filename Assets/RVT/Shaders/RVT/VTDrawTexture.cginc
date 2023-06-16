@@ -79,7 +79,7 @@ pixelOutput_drawTex frag(v2f_drawTex i) : SV_Target
     float4 normal4 = tex2D(_Normal4, transUv);
 
     pixelOutput_drawTex o;
-    // o.col0 = Diffuse2;
+    // o.col0 = normal1;
     o.col0 = blend.r * diffuse1 + blend.g * diffuse2 + blend.b * diffuse3 + blend.a * diffuse4;
     o.col1 = blend.r * normal1 + blend.g * normal2 + blend.b * normal3 + blend.a * normal4;
     return o;

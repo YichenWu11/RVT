@@ -65,9 +65,7 @@ public class RVTTerrain : MonoBehaviour
         _feedbackRenderer = GetComponent<FeedbackRenderer>();
         _feedbackReader = GetComponent<FeedbackReader>();
 
-        var fixedRectCenter = GetFixedCenter(GetFixedPos(transform.position));
-        RealTotalRect = new Rect(fixedRectCenter.x - ViewRadius, fixedRectCenter.y - ViewRadius, 2 * ViewRadius,
-            2 * ViewRadius);
+        RealTotalRect = new Rect(0, 0, 1024, 1024);
 
         _renderTask = new RenderTask();
 
@@ -88,39 +86,6 @@ public class RVTTerrain : MonoBehaviour
 
     private void Update()
     {
-        var fixedPos = GetFixedPos(transform.position);
-        // Debug.Log($"RealTotalRect:{RealTotalRect.center.x},{RealTotalRect.center.y}");
-        // Debug.Log($"fixedPos:{fixedPos.x},{fixedPos.y}");
-        var xDistance = fixedPos.x - RealTotalRect.center.x;
-        var yDistance = fixedPos.y - RealTotalRect.center.y;
-
-        // 需要调整 Rect
-        if (Mathf.Abs(xDistance) > _viewDistance || Mathf.Abs(yDistance) > _viewDistance)
-        {
-            var fixedCenter = GetFixedCenter(fixedPos);
-            if (fixedCenter != RealTotalRect.center)
-            {
-                _renderTask.Clear();
-                var oldCenter = new Vector2Int(
-                    (int)RealTotalRect.center.x,
-                    (int)RealTotalRect.center.y);
-                RealTotalRect = new Rect(
-                    fixedCenter.x - ViewRadius,
-                    fixedCenter.y - ViewRadius,
-                    2 * ViewRadius,
-                    2 * ViewRadius);
-                PageTable.ChangeViewRect((fixedCenter - oldCenter) / (2 * (int)ViewRadius / PageTable.TableSize));
-
-                _feedbackRenderer.FeedbackCamera.Render();
-                _feedbackReader.ReadbackRequest(_feedbackRenderer.TargetTexture, true);
-                _feedbackReader.UpdateRequest();
-                _renderTask.Update();
-                _feedbackReader.UpdateRequest();
-
-                return;
-            }
-        }
-
         _feedbackReader.UpdateRequest();
         if (_feedbackReader.CanRead)
         {
@@ -183,7 +148,6 @@ public class RVTTerrain : MonoBehaviour
                 m33 = 1
             };
 
-            // 绘制贴图
             Graphics.SetRenderTarget(VTTileBuffer, VTDepthBuffer);
             DrawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"), GL.GetGPUProjectionMatrix(mat, true));
             DrawTextureMaterial.SetVector(BlendTile, scaleOffset);
@@ -210,19 +174,5 @@ public class RVTTerrain : MonoBehaviour
                 Graphics.ExecuteCommandBuffer(tempCB); //DEBUG
             }
         }
-    }
-
-    private Vector2Int GetFixedCenter(Vector2Int pos)
-    {
-        return new Vector2Int(
-            (int)Mathf.Floor(pos.x / _viewDistance + 0.5f) * (int)_viewDistance,
-            (int)Mathf.Floor(pos.y / _viewDistance + 0.5f) * (int)_viewDistance);
-    }
-
-    private Vector2Int GetFixedPos(Vector3 pos)
-    {
-        return new Vector2Int(
-            (int)Mathf.Floor(pos.x / CellSize + 0.5f) * (int)CellSize,
-            (int)Mathf.Floor(pos.z / CellSize + 0.5f) * (int)CellSize);
     }
 }

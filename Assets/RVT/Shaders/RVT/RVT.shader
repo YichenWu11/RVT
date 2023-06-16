@@ -62,7 +62,7 @@ Shader "Klay/VT/RVT"
 
             #define _METALLICSPECGLOSSMAP 1
             #define _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A 1
-            #define _RVT
+            #define _USE_RVT_LIT
 
             // -------------------------------------
             // Universal Pipeline keywords

@@ -26,7 +26,7 @@ struct feedback_v2f
     float2 uv : TEXCOORD0;
 };
 
-struct feedback_attr
+struct appdata_feedback
 {
     float4 vertex : POSITION;
     float2 texcoord : TEXCOORD0;
@@ -34,7 +34,7 @@ struct feedback_attr
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
-feedback_v2f VTVertFeedback(feedback_attr v)
+feedback_v2f VTVertFeedback(appdata_feedback v)
 {
     feedback_v2f o;
     UNITY_SETUP_INSTANCE_ID(v);
@@ -56,7 +56,8 @@ feedback_v2f VTVertFeedback(feedback_attr v)
 
     o.pos = Attributes.positionCS;
     float2 posW = Attributes.positionWS.xz;
-    o.uv = (posW - _VTRealRect.xy) / _VTRealRect.zw;
+    // o.uv = (posW - _VTRealRect.xy) / _VTRealRect.zw;
+    o.uv = v.texcoord;
 
     return o;
 }
@@ -71,7 +72,7 @@ float4 VTFragFeedback(feedback_v2f i) : SV_Target
     int mip = clamp(int(0.5 * log2(max(dot(dx, dx), dot(dy, dy))) + 0.5 + _VTFeedbackParam.w), 0, _VTFeedbackParam.z);
 
     return float4(page / 255.0f, mip / 255.0f, 1.0f);
-    // return float4(page / 255.0f, 12.0f / 255.0f, 1.0f);
+    // return float4(float2(1, 2) / 255.0f, 3 / 255.0f, 1.0f);
 }
 
 /*

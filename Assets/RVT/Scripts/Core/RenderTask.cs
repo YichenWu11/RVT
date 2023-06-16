@@ -23,7 +23,7 @@ public class RenderTextureRequest
 public class RenderTask
 {
     // 一帧最多处理几个
-    private readonly int _limit = 5;
+    private readonly int _limit = 2;
 
     // 等待处理的请求.
     private readonly List<RenderTextureRequest> _pendingRequests = new();
@@ -40,18 +40,18 @@ public class RenderTask
             return;
 
         // 优先处理 mipmap 等级高的请求
-        _pendingRequests.Sort((x, y) => x.MipLevel.CompareTo(y.MipLevel));
+        _pendingRequests.Sort((x, y) => -x.MipLevel.CompareTo(y.MipLevel));
 
         var count = _limit;
         while (count > 0 && _pendingRequests.Count > 0)
         {
             count--;
             // 将第一个请求从等待队列移到运行队列
-            var req = _pendingRequests[_pendingRequests.Count - 1];
-            _pendingRequests.RemoveAt(_pendingRequests.Count - 1);
+            var request = _pendingRequests[0];
+            _pendingRequests.RemoveAt(0);
 
             // 开始渲染
-            StartRenderTask?.Invoke(req);
+            StartRenderTask?.Invoke(request);
         }
     }
 
