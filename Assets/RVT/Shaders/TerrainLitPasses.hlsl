@@ -327,26 +327,35 @@ void ComputeMasks(out half4 masks[4], half4 hasMask, Varyings IN)
 
 half4 ComputeRVTColor(Varyings IN)
 {
-    float2 uv = (IN.positionWS.xz) / 1024.0f;
+    float2 uv = (IN.positionWS.xz) / _VTRegionRect.z; // _VTRegionRect.z : the totalWidth of Terrain Region
 
-    float2 uvInt = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
-    float4 page = tex2D(_VTLookupTex, uvInt) * 255;
-    float2 inPageOffset = frac(uv * exp2(_VTPageParam.z - page.b));
-    uv = (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) + inPageOffset * _VTTileParam.y + _VTTileParam.x) /
+    float4 ini_color = tex2D(_VTDiffuse, uv);
+
+    float2 transUV = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
+
+    float4 page = tex2D(_VTLookupTex, transUV) * 255;
+    float2 innerPageOffset = frac(uv * exp2(_VTPageParam.z - page.b));
+
+    uv = (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) + innerPageOffset * _VTTileParam.y + _VTTileParam.x) /
         _VTTileParam.zw;
+
     half3 albedo = tex2D(_VTDiffuse, uv);
     half3 normalTS = UnpackNormalScale(tex2D(_VTNormal, uv), 1);
+
     InputData inputData;
     InitializeInputData(IN, normalTS, inputData);
-    half metallic = 0;
-    half smoothness = 0.1;
-    half occlusion = 1;
-    half alpha = 1;
+
+    const half metallic = 0.0h;
+    const half smoothness = 0.1h;
+    const half occlusion = 1.0h;
+
     half4 color = UniversalFragmentPBR(inputData, albedo, metallic, /* specular */ half3(0.0h, 0.0h, 0.0h), smoothness,
-                                       occlusion, /* emission */ half3(0, 0, 0), alpha);
+                                       occlusion, /* emission */ half3(0, 0, 0), 1.0h);
     SplatmapFinalColor(color, inputData.fogCoord);
 
     return half4(color.rgb, 1.0h);
+    // return half4(transUV, 0.0h, 1.0h);
+    // return half4(unity_FogColor.rgb, 1.0h);
 }
 
 // Used in Standard Terrain shader

@@ -34,7 +34,7 @@ float4 _VTTileParam;
 sampler2D _VTDiffuse;
 sampler2D _VTNormal;
 
-float4 _VTRealRect;
+float4 _VTRegionRect;
 
 VTV2f VTVert(VTAppdata v)
 {

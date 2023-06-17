@@ -83,6 +83,7 @@ public class TiledTexture : MonoBehaviour
     {
         if (!SetActive(tile))
             return;
+        
         DrawTexture?.Invoke(
             new RectInt(
                 tile.x * TileSizeWithBound,
