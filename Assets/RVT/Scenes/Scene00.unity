@@ -560,7 +560,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   readbackScale: 3
   downScaleShader: {fileID: 4800000, guid: 913d8e9752b488749971b9928fb5a0bc, type: 3}
-  debugShader: {fileID: 4800000, guid: 3e5cbdff1f11566449b9744ec1ea6789, type: 3}
+  debugMaterial: {fileID: 0}
 --- !u!114 &982010935
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -588,7 +588,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tableSize: 64
-  debugShader: {fileID: 4800000, guid: 3e5cbdff1f11566449b9744ec1ea6789, type: 3}
+  debugMaterial: {fileID: 2100000, guid: ea27778d245979040a97af433b30320a, type: 2}
 --- !u!1 &1042161576
 GameObject:
   m_ObjectHideFlags: 0

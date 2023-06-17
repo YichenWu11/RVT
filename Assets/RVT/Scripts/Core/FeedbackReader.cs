@@ -12,11 +12,8 @@ public class FeedbackReader : MonoBehaviour
     // 缩放着色器, 找到区域中 mipmap 等级最小的像素作为最终像素，其余像素抛弃
     [SerializeField] private Shader downScaleShader;
 
-    // 用于在编辑器中显示贴图 mipmap 等级
-    [SerializeField] private Shader debugShader;
-
     // 调试材质 用于在编辑器中显示贴图 mipmap 等级
-    private Material _debugMaterial;
+    [SerializeField] private Material debugMaterial;
 
     // 缩放材质
     private Material _downScaleMaterial;
@@ -122,13 +119,10 @@ public class FeedbackReader : MonoBehaviour
     private void UpdateDebugTexture()
     {
 #if UNITY_EDITOR
-        if (_readbackTexture == null || debugShader == null)
+        if (_readbackTexture == null || debugMaterial == null)
             return;
 
-        if (_debugMaterial == null)
-            _debugMaterial = new Material(debugShader);
-
-        Graphics.Blit(_readbackTexture, DebugTexture, _debugMaterial);
+        Graphics.Blit(_readbackTexture, DebugTexture, debugMaterial);
 #endif
     }
 }

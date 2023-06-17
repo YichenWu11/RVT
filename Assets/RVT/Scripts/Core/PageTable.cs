@@ -10,12 +10,10 @@ public class PageTable : MonoBehaviour
     // 页表尺寸
     [SerializeField] private int tableSize = 128;
 
-    [SerializeField] private Shader debugShader;
+    [SerializeField] private Material debugMaterial;
 
     // 当前活跃的页表
     private readonly Dictionary<Vector2Int, PageLevelTableNode> _activePages = new();
-
-    private Material _debugMaterial;
 
     // 导出的页表寻址贴图
     private Texture2D _lookupTexture;
@@ -188,14 +186,11 @@ public class PageTable : MonoBehaviour
     private void UpdateDebugTexture()
     {
 #if UNITY_EDITOR
-        if (_lookupTexture == null || debugShader == null)
+        if (debugMaterial == null)
             return;
 
-        if (_debugMaterial == null)
-            _debugMaterial = new Material(debugShader);
-
         DebugTexture.DiscardContents();
-        Graphics.Blit(_lookupTexture, DebugTexture, _debugMaterial);
+        Graphics.Blit(_lookupTexture, DebugTexture, debugMaterial);
 #endif
     }
 }
