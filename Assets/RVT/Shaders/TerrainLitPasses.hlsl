@@ -327,20 +327,20 @@ void ComputeMasks(out half4 masks[4], half4 hasMask, Varyings IN)
 
 half4 ComputeRVTColor(Varyings IN)
 {
-    float2 uv = (IN.positionWS.xz) / _VTRegionRect.z; // _VTRegionRect.z : the totalWidth of Terrain Region
+    // _VTRegionRect.z : the totalWidth of Terrain Region
+    float2 uv = (IN.positionWS.xz - _VTRegionRect.xy) / _VTRegionRect.z;
 
-    float4 ini_color = tex2D(_VTDiffuse, uv);
+    // float4 ini_color = tex2D(_VTDiffuse, uv);
+    // uv = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
 
-    float2 transUV = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
+    float4 page = tex2D(_VTLookupTex, uv) * 255;
+    const float2 inner_offset = frac(uv * exp2(_VTPageParam.z - page.b));
 
-    float4 page = tex2D(_VTLookupTex, transUV) * 255;
-    float2 innerPageOffset = frac(uv * exp2(_VTPageParam.z - page.b));
+    uv = (page.rg * (_VTTileParam.y) /* 定位到 Tile */
+        + inner_offset * _VTTileParam.y /* 页内偏移 */) / _VTTileParam.zw /* TiledTexture 尺寸 */ ;
 
-    uv = (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) + innerPageOffset * _VTTileParam.y + _VTTileParam.x) /
-        _VTTileParam.zw;
-
-    half3 albedo = tex2D(_VTDiffuse, uv);
-    half3 normalTS = UnpackNormalScale(tex2D(_VTNormal, uv), 1);
+    const half3 albedo = tex2D(_VTDiffuse, uv);
+    const half3 normalTS = UnpackNormalScale(tex2D(_VTNormal, uv), 1);
 
     InputData inputData;
     InitializeInputData(IN, normalTS, inputData);
@@ -350,11 +350,11 @@ half4 ComputeRVTColor(Varyings IN)
     const half occlusion = 1.0h;
 
     half4 color = UniversalFragmentPBR(inputData, albedo, metallic, /* specular */ half3(0.0h, 0.0h, 0.0h), smoothness,
-                                       occlusion, /* emission */ half3(0, 0, 0), 1.0h);
+                                       occlusion, /* emission */ half3(0, 0, 0), /* alpha */ 1.0h);
     SplatmapFinalColor(color, inputData.fogCoord);
 
     return half4(color.rgb, 1.0h);
-    // return half4(transUV, 0.0h, 1.0h);
+    // return half4(uv, 0.0h, 1.0h);
     // return half4(unity_FogColor.rgb, 1.0h);
 }
 
@@ -367,6 +367,7 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
 {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
 
+    // USE_RVT
     #ifdef _USE_RVT_LIT
     return ComputeRVTColor(IN);
     #endif
