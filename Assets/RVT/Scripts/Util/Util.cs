@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public enum ScaleFactor
@@ -65,5 +66,16 @@ public class Util
         quadMesh.SetTriangles(triangles, 0);
 
         return quadMesh;
+    }
+
+    public static void DrawTexture(Texture texture, string label = null)
+    {
+        if (texture == null)
+            return;
+
+        EditorGUILayout.Space();
+        if (!string.IsNullOrEmpty(label)) EditorGUILayout.LabelField(label);
+        EditorGUILayout.LabelField($"Size: {texture.width} X {texture.height}");
+        EditorGUI.DrawPreviewTexture(GUILayoutUtility.GetAspectRect(texture.width / (float)texture.height), texture);
     }
 }

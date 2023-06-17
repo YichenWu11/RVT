@@ -1,13 +1,21 @@
 ﻿using UnityEditor;
+using UnityEngine;
 
 [CustomEditor(typeof(TiledTexture))]
-public class TileTextureEditor : DisplayEditor
+public class TileTextureEditor : Editor
 {
-    protected override void OnPlayingInspectorGUI()
+    public override void OnInspectorGUI()
     {
-        var tileTexture = (TiledTexture)target;
+        if (Application.isPlaying)
+        {
+            var tileTexture = (TiledTexture)target;
 
-        DrawTexture(tileTexture.VTRTs[0], "Diffuse");
-        DrawTexture(tileTexture.VTRTs[1], "Normal");
+            Util.DrawTexture(tileTexture.VTRTs[0], "Diffuse");
+            Util.DrawTexture(tileTexture.VTRTs[1], "Normal");
+        }
+        else
+        {
+            base.OnInspectorGUI();
+        }
     }
 }

@@ -1,11 +1,19 @@
 ﻿using UnityEditor;
+using UnityEngine;
 
 [CustomEditor(typeof(FeedbackRenderer))]
-public class FeedbackRendererEditor : DisplayEditor
+public class FeedbackRendererEditor : Editor
 {
-    protected override void OnPlayingInspectorGUI()
+    public override void OnInspectorGUI()
     {
-        var renderer = (FeedbackRenderer)target;
-        DrawTexture(renderer.TargetTexture, "Feedback Texture");
+        if (Application.isPlaying)
+        {
+            var renderer = (FeedbackRenderer)target;
+            Util.DrawTexture(renderer.TargetTexture, "Feedback Texture");
+        }
+        else
+        {
+            base.OnInspectorGUI();
+        }
     }
 }

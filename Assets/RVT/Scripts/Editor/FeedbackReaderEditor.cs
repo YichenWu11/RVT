@@ -1,11 +1,19 @@
 ﻿using UnityEditor;
+using UnityEngine;
 
 [CustomEditor(typeof(FeedbackReader))]
-public class FeedbackReaderEditor : DisplayEditor
+public class FeedbackReaderEditor : Editor
 {
-    protected override void OnPlayingInspectorGUI()
+    public override void OnInspectorGUI()
     {
-        var reader = (FeedbackReader)target;
-        DrawTexture(reader.DebugTexture, "Mipmap Level Debug Texture");
+        if (Application.isPlaying)
+        {
+            var reader = (FeedbackReader)target;
+            Util.DrawTexture(reader.DebugTexture, "Mipmap Level Debug Texture");
+        }
+        else
+        {
+            base.OnInspectorGUI();
+        }
     }
 }
