@@ -70,6 +70,7 @@ public class Util
 
     public static void DrawTexture(Texture texture, string label = null)
     {
+#if UNITY_EDITOR
         if (texture == null)
             return;
 
@@ -77,5 +78,6 @@ public class Util
         if (!string.IsNullOrEmpty(label)) EditorGUILayout.LabelField(label);
         EditorGUILayout.LabelField($"Size: {texture.width} X {texture.height}");
         EditorGUI.DrawPreviewTexture(GUILayoutUtility.GetAspectRect(texture.width / (float)texture.height), texture);
+#endif
     }
 }

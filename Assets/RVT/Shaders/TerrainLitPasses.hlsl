@@ -336,13 +336,13 @@ half4 ComputeRVTColor(Varyings IN)
     float4 page = tex2D(_VTLookupTex, uv) * 255.0f;
     const float2 inner_offset = frac(uv * exp2(_VTPageParam.z - page.b));
 
-    // without bound
-    uv = (page.rg * (_VTTileParam.y) /* 定位到 Tile */
-        + inner_offset * _VTTileParam.y /* 页内偏移 */) / _VTTileParam.zw /* TiledTexture 尺寸 */ ;
+    // // without bound
+    // uv = (page.rg * (_VTTileParam.y) /* 定位到 Tile */
+    //     + inner_offset * _VTTileParam.y /* 页内偏移 */) / _VTTileParam.zw /* TiledTexture 尺寸 */ ;
 
     // with bound
-    // uv = (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) /* 定位到 Tile */
-    //     + inner_offset * _VTTileParam.y + _VTTileParam.x) / _VTTileParam.zw;
+    uv = (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) /* 定位到 Tile */
+        + inner_offset * _VTTileParam.y + _VTTileParam.x) / _VTTileParam.zw;
 
     const half3 albedo = tex2D(_VTDiffuse, uv);
     const half3 normalTS = UnpackNormalScale(tex2D(_VTNormal, uv), 1);
@@ -374,7 +374,7 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
 
     // USE_RVT
     #ifdef _USE_RVT_LIT
-    return ComputeRVTColor(IN);
+        return ComputeRVTColor(IN);
     #endif
 
     #ifdef _ALPHATEST_ON
@@ -477,8 +477,8 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
 
     SplatmapFinalColor(color, inputData.fogCoord);
 
-    return half4(color.rgb, 1.0h);
-    // return half4(splatControl.rgb, 1.0h);
+    // return half4(color.rgb, 1.0h);
+    return half4(splatControl.rgb, 1.0h);
     // return half4(page / 255.0, 0.0h, 1.0h);
     #endif
 }

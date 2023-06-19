@@ -62,7 +62,6 @@ Shader "Klay/VT/RVT"
 
             #define _METALLICSPECGLOSSMAP 1
             #define _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A 1
-            #define _USE_RVT_LIT
 
             // -------------------------------------
             // Universal Pipeline keywords
@@ -78,6 +77,7 @@ Shader "Klay/VT/RVT"
             #pragma multi_compile_fragment _ _LIGHT_LAYERS
             #pragma multi_compile_fragment _ _LIGHT_COOKIES
             #pragma multi_compile _ _CLUSTERED_RENDERING
+            #pragma multi_compile _ _USE_RVT_LIT
 
             // -------------------------------------
             // Unity defined keywords

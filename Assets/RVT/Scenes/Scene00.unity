@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 292535969}
   - component: {fileID: 292535968}
   - component: {fileID: 292535972}
-  - component: {fileID: 292535971}
+  - component: {fileID: 292535973}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -209,7 +209,40 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 21.269, y: 3.651, z: -1.209}
---- !u!114 &292535971
+--- !u!114 &292535972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 292535967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: 0
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+--- !u!114 &292535973
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -250,39 +283,6 @@ MonoBehaviour:
     m_RotationOrder: 4
   rotationLerpTime: 0.01
   invertY: 1
---- !u!114 &292535972
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 292535967}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_RenderShadows: 1
-  m_RequiresDepthTextureOption: 2
-  m_RequiresOpaqueTextureOption: 2
-  m_CameraType: 0
-  m_Cameras: []
-  m_RendererIndex: 0
-  m_VolumeLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
-  m_VolumeTrigger: {fileID: 0}
-  m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
-  m_Antialiasing: 0
-  m_AntialiasingQuality: 2
-  m_StopNaN: 0
-  m_Dithering: 0
-  m_ClearDepth: 1
-  m_AllowXRRendering: 1
-  m_RequiresDepthTexture: 0
-  m_RequiresColorTexture: 0
-  m_Version: 2
 --- !u!1 &319696040
 GameObject:
   m_ObjectHideFlags: 0
@@ -448,13 +448,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 642987e61803b0046865833f7ad0d21c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  EnableRVTUpdate: 1
+  EnableUseRVTLit: 1
   TerrainList:
   - {fileID: 1042161578}
-  TotalWidth: 1024
-  TotalLength: 1024
-  LeftDownCorner: {x: 0, y: 0}
+  regionRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1024
+    height: 1024
   DrawTextureMaterial: {fileID: 2100000, guid: 26be0d72645c0b945ad4cb40b55d5458, type: 2}
-  PageTable: {fileID: 0}
 --- !u!114 &982010931
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -469,7 +473,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   regionSize: {x: 10, y: 10}
   tileSize: 512
-  boundSize: 0
+  boundSize: 4
 --- !u!114 &982010932
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -512,7 +516,7 @@ Camera:
   m_GameObject: {fileID: 982010928}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
+  m_ClearFlags: 2
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -558,9 +562,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93ff67bf5f116274e9ee91a484c46f61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  readbackScale: 3
-  downScaleShader: {fileID: 4800000, guid: 913d8e9752b488749971b9928fb5a0bc, type: 3}
-  debugMaterial: {fileID: 0}
+  debugMaterial: {fileID: 2100000, guid: ea27778d245979040a97af433b30320a, type: 2}
+  downScaleMaterial: {fileID: 2100000, guid: de41643211bf0cd49bb53e499831fa30, type: 2}
 --- !u!114 &982010935
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -573,7 +576,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b443f408cd519f46a850f99db11ed70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scale: 3
   mipmapBias: 0
 --- !u!114 &982010936
 MonoBehaviour:

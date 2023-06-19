@@ -1,24 +1,25 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
 public class RVTTerrain : MonoBehaviour
 {
-    private static readonly int VTRegionRect = Shader.PropertyToID("_VTRegionRect"); // 可视 Rect
+    private static readonly int VTRegionRect = Shader.PropertyToID("_VTRegionRect");
     private static readonly int BlendTile = Shader.PropertyToID("_BlendTile");
     private static readonly int Blend = Shader.PropertyToID("_Blend");
 
-    public List<Terrain> TerrainList = new();
+    // RVT Settings
+    [Header("RVT Settings")] public bool EnableRVTUpdate = true;
+    public bool EnableUseRVTLit = true;
 
-    public int TotalWidth = 1024; // 区域总宽度
-    public int TotalLength = 1024; // 区域总长度
-    public Vector2 LeftDownCorner = new(0, 0); // 区域左下角世界坐标
+    [Space] public List<Terrain> TerrainList = new();
+
+    // Terrain Region 占据的 Rect
+    public Rect regionRect = new(0, 0, 1024, 1024);
 
     // 贴图绘制材质
     public Material DrawTextureMaterial;
-
-    // 页表
-    [HideInInspector] public PageTable PageTable;
 
     private readonly RenderTask _renderTask = new();
 
@@ -29,9 +30,6 @@ public class RVTTerrain : MonoBehaviour
     // helper mesh
     private Mesh _quadMesh;
 
-    // Terrain Region 占据的 Rect
-    private Rect _regionRect;
-
     // TiledTexture
     private TiledTexture _tiledTexture;
 
@@ -41,7 +39,8 @@ public class RVTTerrain : MonoBehaviour
     // 可视距离
     private float _viewDistance;
 
-    private bool isDraw;
+    // 页表
+    private PageTable PageTable;
 
     // From TiledTexture
     private RenderBuffer VTDepthBuffer;
@@ -54,10 +53,9 @@ public class RVTTerrain : MonoBehaviour
         _feedbackReader = GetComponent<FeedbackReader>();
         _tiledTexture = GetComponent<TiledTexture>();
 
-        _regionRect = new Rect(LeftDownCorner.x, LeftDownCorner.y, TotalWidth, TotalLength);
         Shader.SetGlobalVector(
             VTRegionRect,
-            new Vector4(_regionRect.xMin, _regionRect.yMin, _regionRect.width, _regionRect.height));
+            new Vector4(regionRect.xMin, regionRect.yMin, regionRect.width, regionRect.height));
 
         _tiledTexture.Init();
         _tiledTexture.DrawTexture += DrawTiledTexture;
@@ -75,6 +73,12 @@ public class RVTTerrain : MonoBehaviour
 
     private void Update()
     {
+        if (EnableUseRVTLit) Shader.EnableKeyword("_USE_RVT_LIT");
+        else Shader.DisableKeyword("_USE_RVT_LIT");
+
+        if (!EnableRVTUpdate) return;
+
+        Profiler.BeginSample("RVT");
         _feedbackReader.UpdateRequest();
         if (_feedbackReader.CanRead)
         {
@@ -83,6 +87,7 @@ public class RVTTerrain : MonoBehaviour
         }
 
         _renderTask.Update();
+        Profiler.EndSample();
     }
 
     private void DrawTiledTexture(RectInt drawPos, RenderRequest request)
@@ -96,13 +101,13 @@ public class RVTTerrain : MonoBehaviour
         y -= y % perCellSize;
 
         var boundOffset =
-            _tiledTexture.BoundSize * perCellSize * (_regionRect.width / PageTable.TableSize) /
+            _tiledTexture.BoundSize * perCellSize * (regionRect.width / PageTable.TableSize) /
             _tiledTexture.TileSize;
         var realRect = new Rect(
-            _regionRect.xMin + (float)x / PageTable.TableSize * _regionRect.width - boundOffset,
-            _regionRect.yMin + (float)y / PageTable.TableSize * _regionRect.height - boundOffset,
-            _regionRect.width / PageTable.TableSize * perCellSize + 2.0f * boundOffset,
-            _regionRect.width / PageTable.TableSize * perCellSize + 2.0f * boundOffset);
+            regionRect.xMin + (float)x / PageTable.TableSize * regionRect.width - boundOffset,
+            regionRect.yMin + (float)y / PageTable.TableSize * regionRect.height - boundOffset,
+            regionRect.width / PageTable.TableSize * perCellSize + 2.0f * boundOffset,
+            regionRect.width / PageTable.TableSize * perCellSize + 2.0f * boundOffset);
         var terrainRect = Rect.zero;
 
         foreach (var terrain in TerrainList)

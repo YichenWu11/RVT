@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Profiling;
 
 public class PageTable : MonoBehaviour
 {
@@ -86,9 +87,12 @@ public class PageTable : MonoBehaviour
 
     private void UpdateLookup()
     {
+        Profiler.BeginSample("Write Lookup Texture");
+
         var pixels = _lookupTexture.GetRawTextureData<Color32>();
+
         // 将页表数据写入页表贴图
-        var currentFrame = (byte)Time.frameCount;
+        var curFrame = (byte)Time.frameCount;
         foreach (var kv in _activePages)
         {
             var page = kv.Value;
@@ -101,31 +105,46 @@ public class PageTable : MonoBehaviour
                 (byte)page.Data.TileIndex.x,
                 (byte)page.Data.TileIndex.y,
                 (byte)page.MipLevel,
-                currentFrame);
-            for (var y = page.Rect.y; y < page.Rect.yMax; y++)
+                curFrame);
+
             for (var x = page.Rect.x; x < page.Rect.xMax; x++)
+            for (var y = page.Rect.y; y < page.Rect.yMax; y++)
             {
                 var id = y * TableSize + x;
-                if (pixels[id].b > color.b || pixels[id].a != currentFrame)
+                if (pixels[id].b > color.b || pixels[id].a != curFrame)
                     pixels[id] = color;
             }
+
+            // var updateJob = new UpdateLookupJob
+            // {
+            //     pixels = pixels,
+            //     curFrame = curFrame,
+            //     color = color,
+            //     offset = page.Rect.y * TableSize + page.Rect.x
+            // };
+            //
+            // var handle = updateJob.Schedule((page.Rect.yMax - page.Rect.y) * (page.Rect.xMax - page.Rect.x), 32);
+            //
+            // handle.Complete();
         }
 
         // 将改动同步到 GPU 端
         _lookupTexture.Apply(false);
 
         UpdateDebugTexture();
+
+        Profiler.EndSample();
     }
 
     // 激活页表
-    private PageLevelTableNode ActivatePage(int x, int y, int mip)
+    private void ActivatePage(int x, int y, int mip)
     {
         if (mip > MaxMipLevel || mip < 0 || x < 0 || y < 0 || x >= TableSize || y >= TableSize)
-            return null;
+            return;
 
         // 找到当前页表
         var page = _pageTable[mip].Get(x, y);
-        if (page == null) return null;
+        if (page == null) return;
         if (!page.Data.IsReady)
         {
             LoadPage(x, y, page);
@@ -138,11 +157,10 @@ public class PageTable : MonoBehaviour
             }
         }
 
-        if (!page.Data.IsReady) return null;
+        if (!page.Data.IsReady) return;
         // 激活对应的平铺贴图块
         _tileTexture.SetActive(page.Data.TileIndex);
         page.Data.ActiveFrame = Time.frameCount;
-        return page;
     }
 
     // 加载页表
@@ -185,7 +203,7 @@ public class PageTable : MonoBehaviour
 
     private void UpdateDebugTexture()
     {
-#if UNITY_EDITOR
+#if (UNITY_EDITOR && RVT_DEBUG)
         if (debugMaterial == null)
             return;
 
@@ -193,4 +211,19 @@ public class PageTable : MonoBehaviour
         Graphics.Blit(_lookupTexture, DebugTexture, debugMaterial);
 #endif
     }
+
+    // public struct UpdateLookupJob : IJobParallelFor
+    // {
+    //     public NativeArray<Color32> pixels;
+    //     public Color32 color;
+    //     public byte curFrame;
+    //     public int offset;
+    //
+    //     public void Execute(int index)
+    //     {
+    //         index = index + offset;
+    //         if (pixels[index].b > color.b || pixels[index].a != curFrame)
+    //             pixels[index] = color;
+    //     }
+    // }
 }
