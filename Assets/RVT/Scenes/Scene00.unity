@@ -123,58 +123,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &118356929
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 118356931}
-  - component: {fileID: 118356930}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &118356930
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 118356929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ffd95c758411424486fb645cdbbfde1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  regionRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1024
-    height: 1024
-  mainCamera: {fileID: 0}
-  tableSize: 64
---- !u!4 &118356931
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 118356929}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 639.0904, y: 12.644721, z: 459.78998}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &292535967
 GameObject:
   m_ObjectHideFlags: 0
@@ -464,6 +412,7 @@ GameObject:
   - component: {fileID: 982010936}
   - component: {fileID: 982010935}
   - component: {fileID: 982010934}
+  - component: {fileID: 982010937}
   - component: {fileID: 982010933}
   - component: {fileID: 982010932}
   m_Layer: 0
@@ -502,15 +451,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   EnableRVTUpdate: 1
   EnableUseRVTLit: 1
-  TerrainList:
-  - {fileID: 1042161578}
+  terrain: {fileID: 1042161578}
   regionRect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 1024
     height: 1024
-  DrawTextureMaterial: {fileID: 2100000, guid: 26be0d72645c0b945ad4cb40b55d5458, type: 2}
+  drawTextureMaterial: {fileID: 2100000, guid: 26be0d72645c0b945ad4cb40b55d5458, type: 2}
 --- !u!114 &982010931
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -643,6 +591,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tableSize: 64
   debugMaterial: {fileID: 2100000, guid: ea27778d245979040a97af433b30320a, type: 2}
+--- !u!114 &982010937
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 982010928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e98ca09dc14bad84f9791ce1a4e2632b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  regionRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1024
+    height: 1024
 --- !u!1 &1042161576
 GameObject:
   m_ObjectHideFlags: 0

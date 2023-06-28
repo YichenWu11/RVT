@@ -43,10 +43,10 @@ public class PageLevelTableNode
 public class PageLevelTable
 {
     // 当前层级的 Cell 总数量
-    private readonly int CellCount;
+    public readonly int CellCount;
 
     // 每个 Cell 占据的尺寸
-    private readonly int PerCellSize;
+    public readonly int PerCellSize;
 
     public PageLevelTable(int mipLevel, int tableSize)
     {
@@ -65,7 +65,7 @@ public class PageLevelTable
         // Debug.Log($"MipLevel {mipLevel} : {PerCellSize} {tableSize}");
     }
 
-    private PageLevelTableNode[,] Cell { get; }
+    public PageLevelTableNode[,] Cell { get; }
 
     // Mip 层级
     private int MipLevel { get; }

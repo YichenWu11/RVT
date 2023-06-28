@@ -331,17 +331,17 @@ half4 ComputeRVTColor(Varyings IN)
     float2 uv = (IN.positionWS.xz - _VTRegionRect.xy) / _VTRegionRect.z;
 
     // float4 ini_color = tex2D(_VTDiffuse, uv);
-    // uv = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
+    // float2 pageUV = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
 
     // page.xy : xy coord in tiledTexture
     float4 page = tex2D(_VTLookupTex, uv) * 255.0f;
     const float2 inner_offset = frac(uv * exp2(_VTPageParam.z - page.b));
 
-    // without bound
+    // without border
     // uv = (page.rg * (_VTTileParam.y) /* 定位到 Tile */
     // + inner_offset * _VTTileParam.y /* 页内偏移 */) / _VTTileParam.zw /* TiledTexture 尺寸 */ ;
 
-    // with bound
+    // with border
     uv = (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) /* 定位到 Tile */
         + inner_offset * _VTTileParam.y + _VTTileParam.x) / _VTTileParam.zw;
 
@@ -361,7 +361,7 @@ half4 ComputeRVTColor(Varyings IN)
 
     return half4(color.rgb, 1.0h);
     // return half4(page.rg / 255.0f, 0.0h, 1.0h);
-    // return half4(uv, 0.0h, 1.0h);
+    // return half4(ini_color.rgb, 1.0h);
     // return half4(unity_FogColor.rgb, 1.0h);
 }
 

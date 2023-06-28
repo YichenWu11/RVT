@@ -179,7 +179,6 @@ public class PageTable : MonoBehaviour
         _activePages[id] = node;
     }
 
-    // 将页表置为非活跃状态
     private void InvalidatePage(Vector2Int id)
     {
         if (!_activePages.TryGetValue(id, out var node))
@@ -187,6 +186,15 @@ public class PageTable : MonoBehaviour
 
         node.Data.ResetTileIndex();
         _activePages.Remove(id);
+    }
+
+    public void Reset()
+    {
+        for (var i = 0; i <= MaxMipLevel; i++)
+        for (var j = 0; j < _pageTable[i].CellCount; j++)
+        for (var k = 0; k < _pageTable[i].CellCount; k++)
+            InvalidatePage(_pageTable[i].Cell[j, k].Data.TileIndex);
+        _activePages.Clear();
     }
 
     private void UpdateDebugTexture()

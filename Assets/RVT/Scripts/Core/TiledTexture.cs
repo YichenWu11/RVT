@@ -83,7 +83,7 @@ public class TiledTexture : MonoBehaviour
     {
         if (!SetActive(tile))
             return;
-        
+
         DrawTexture?.Invoke(
             new RectInt(
                 tile.x * TileSizeWithBound,
@@ -92,6 +92,26 @@ public class TiledTexture : MonoBehaviour
                 TileSizeWithBound),
             request);
         OnTileUpdateComplete?.Invoke(tile);
+    }
+
+    public void Reset()
+    {
+        _tilePool.Init(RegionSize.x * RegionSize.y);
+
+        VTRTs = new RenderTexture[2];
+        VTRTs[0] = new RenderTexture(RegionSize.x * TileSizeWithBound, RegionSize.y * TileSizeWithBound, 0)
+        {
+            useMipMap = false,
+            wrapMode = TextureWrapMode.Clamp
+        };
+        Shader.SetGlobalTexture(VTDiffuse, VTRTs[0]);
+
+        VTRTs[1] = new RenderTexture(RegionSize.x * TileSizeWithBound, RegionSize.y * TileSizeWithBound, 0)
+        {
+            useMipMap = false,
+            wrapMode = TextureWrapMode.Clamp
+        };
+        Shader.SetGlobalTexture(VTNormal, VTRTs[1]);
     }
 
     private Vector2Int IdToPos(int id)

@@ -105,6 +105,24 @@ public static class ScaleModeExtensions
 
 public class Util
 {
+    public static float Frac(float n)
+    {
+        return n - Mathf.FloorToInt(n);
+    }
+
+    public static Matrix4x4 GetTileMatrix(float l, float r, float b, float t)
+    {
+        return new Matrix4x4
+        {
+            m00 = r - l,
+            m03 = l,
+            m11 = t - b,
+            m13 = b,
+            m23 = -1,
+            m33 = 1
+        };
+    }
+
     public static Mesh BuildQuadMesh()
     {
         var vertexes = new List<Vector3>();

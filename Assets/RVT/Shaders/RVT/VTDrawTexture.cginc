@@ -67,7 +67,7 @@ pixelOutput_drawTex frag(v2f_drawTex i) : SV_Target
 
     pixelOutput_drawTex o;
     float4 color = blend.r * diffuse1 + blend.g * diffuse2 + blend.b * diffuse3 + blend.a * diffuse4;
-    color.rgb += decal0.rgb * decal0.a;
+    // color.rgb += decal0.rgb * decal0.a;
     o.col0 = color;
     o.col1 = blend.r * normal1 + blend.g * normal2 + blend.b * normal3 + blend.a * normal4;
     return o;
@@ -76,6 +76,8 @@ pixelOutput_drawTex frag(v2f_drawTex i) : SV_Target
 pixelOutput_drawTex decalFrag(v2f_drawTex i) : SV_Target
 {
     float4 blend = tex2D(_Blend, i.uv * _BlendTile.xy + _BlendTile.zw);
+
+    float4 decal0 = tex2D(_Decal0, i.uv);
 
     float2 transUv = i.uv * _TileOffset1.xy + _TileOffset1.zw;
     float4 diffuse1 = tex2Dlod(_Diffuse1, float4(transUv, 0, 0));
@@ -94,7 +96,9 @@ pixelOutput_drawTex decalFrag(v2f_drawTex i) : SV_Target
     float4 normal4 = tex2Dlod(_Normal4, float4(transUv, 0, 0));
 
     pixelOutput_drawTex o;
-    o.col0 = blend.r * diffuse1 + blend.g * diffuse2 + blend.b * diffuse3 + blend.a * diffuse4;
+    float4 color = blend.r * diffuse1 + blend.g * diffuse2 + blend.b * diffuse3 + blend.a * diffuse4;
+    color.rgb += decal0.rgb * decal0.a;
+    o.col0 = color;
     o.col1 = blend.r * normal1 + blend.g * normal2 + blend.b * normal3 + blend.a * normal4;
     return o;
 }
