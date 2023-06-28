@@ -21,6 +21,8 @@
     	
 		_Blend("Blend", 2D) = "white" {}
 		_BlendTile("Blend Tile",Vector) = (0,0,100,100)
+    	
+    	_Decal0("Decal0", 2D) = "white" {}
     }
 
     SubShader
@@ -33,6 +35,21 @@
 
             #pragma vertex vert
             #pragma fragment frag
+
+            #include "UnityCG.cginc"
+			#include "VTDrawTexture.cginc"
+            ENDCG
+        }
+    	
+    	Pass
+        {
+        	Tags { "LightMode" = "VTDecalRenderer" }
+        	
+            CGPROGRAM
+			#pragma target 3.0
+
+            #pragma vertex vert
+            #pragma fragment decalFrag
 
             #include "UnityCG.cginc"
 			#include "VTDrawTexture.cginc"

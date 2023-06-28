@@ -7,8 +7,8 @@ public class FeedbackRenderer : MonoBehaviour
 
     [SerializeField] private int mipmapBias;
 
-    // Feedback RT 缩放比例
-    private readonly ScaleFactor scale = ScaleFactor.Eighth;
+    // Feedback RT 缩放
+    private readonly float _scaleFactor = 1.0f / 16.0f;
 
     public Camera FeedbackCamera { get; private set; }
 
@@ -34,9 +34,8 @@ public class FeedbackRenderer : MonoBehaviour
         if (FeedbackCamera == null) FeedbackCamera = gameObject.AddComponent<Camera>();
         FeedbackCamera.enabled = false;
 
-        var scaleF = scale.ToFloat();
-        var width = (int)(mainCamera.pixelWidth * scaleF);
-        var height = (int)(mainCamera.pixelHeight * scaleF);
+        var width = (int)(mainCamera.pixelWidth * _scaleFactor);
+        var height = (int)(mainCamera.pixelHeight * _scaleFactor);
         if (TargetTexture == null || TargetTexture.width != width || TargetTexture.height != height)
         {
             TargetTexture = new RenderTexture(width, height, 0, GraphicsFormat.R8G8B8A8_UNorm)
@@ -57,7 +56,7 @@ public class FeedbackRenderer : MonoBehaviour
             VTFeedbackParam,
             new Vector4(
                 virtualTable.TableSize,
-                virtualTable.TableSize * tileTexture.TileSize * scaleF,
+                virtualTable.TableSize * tileTexture.TileSize * _scaleFactor,
                 virtualTable.MaxMipLevel - 1,
                 mipmapBias));
     }

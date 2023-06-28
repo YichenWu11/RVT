@@ -87,7 +87,7 @@ public class PageTable : MonoBehaviour
 
     private void UpdateLookup()
     {
-        Profiler.BeginSample("Write Lookup Texture");
+        Profiler.BeginSample("Write LUT");
 
         var pixels = _lookupTexture.GetRawTextureData<Color32>();
 
@@ -114,18 +114,6 @@ public class PageTable : MonoBehaviour
                 if (pixels[id].b > color.b || pixels[id].a != curFrame)
                     pixels[id] = color;
             }
-
-            // var updateJob = new UpdateLookupJob
-            // {
-            //     pixels = pixels,
-            //     curFrame = curFrame,
-            //     color = color,
-            //     offset = page.Rect.y * TableSize + page.Rect.x
-            // };
-            //
-            // var handle = updateJob.Schedule((page.Rect.yMax - page.Rect.y) * (page.Rect.xMax - page.Rect.x), 32);
-            //
-            // handle.Complete();
         }
 
         // 将改动同步到 GPU 端
@@ -211,19 +199,4 @@ public class PageTable : MonoBehaviour
         Graphics.Blit(_lookupTexture, DebugTexture, debugMaterial);
 #endif
     }
-
-    // public struct UpdateLookupJob : IJobParallelFor
-    // {
-    //     public NativeArray<Color32> pixels;
-    //     public Color32 color;
-    //     public byte curFrame;
-    //     public int offset;
-    //
-    //     public void Execute(int index)
-    //     {
-    //         index = index + offset;
-    //         if (pixels[index].b > color.b || pixels[index].a != curFrame)
-    //             pixels[index] = color;
-    //     }
-    // }
 }

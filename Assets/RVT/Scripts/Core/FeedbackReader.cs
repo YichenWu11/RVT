@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
 public class FeedbackReader : MonoBehaviour
@@ -12,7 +13,7 @@ public class FeedbackReader : MonoBehaviour
     [SerializeField] private Material downScaleMaterial;
 
     // 回读目标缩放比例
-    private readonly ScaleFactor readbackScale = ScaleFactor.Eighth;
+    private readonly ScaleFactor readbackScale = ScaleFactor.Quarter;
 
     // 缩小后的 RT
     private RenderTexture _downScaleTexture;
@@ -62,14 +63,12 @@ public class FeedbackReader : MonoBehaviour
         var height = (int)(texture.height * readbackScale.ToFloat());
 
         // 缩放
-        if (readbackScale != ScaleFactor.One)
-        {
-            if (_downScaleTexture == null || _downScaleTexture.width != width || _downScaleTexture.height != height)
-                _downScaleTexture = new RenderTexture(width, height, 0, GraphicsFormat.R8G8B8A8_UNorm);
+        if (_downScaleTexture == null || _downScaleTexture.width != width || _downScaleTexture.height != height)
+            _downScaleTexture = new RenderTexture(width, height, 0, GraphicsFormat.R8G8B8A8_UNorm);
 
-            Graphics.Blit(texture, _downScaleTexture, downScaleMaterial, downScaleMaterialPass);
-            texture = _downScaleTexture;
-        }
+        Graphics.Blit(texture, _downScaleTexture, downScaleMaterial, downScaleMaterialPass);
+        texture = _downScaleTexture;
+
 
         if (_readbackTexture == null || _readbackTexture.width != width || _readbackTexture.height != height)
         {
@@ -96,6 +95,8 @@ public class FeedbackReader : MonoBehaviour
     {
         if (_readbackRequest is not { done: true, hasError: false }) return;
 
+        Profiler.BeginSample("ReadbackAndProcess");
+
         var colors = _readbackRequest.GetData<Color32>();
         _readbackTexture.GetRawTextureData<Color32>().CopyFrom(colors);
 
@@ -104,6 +105,8 @@ public class FeedbackReader : MonoBehaviour
 
         OnFeedbackReadComplete?.Invoke(_readbackTexture);
         UpdateDebugTexture();
+
+        Profiler.EndSample();
     }
 
     private void UpdateDebugTexture()

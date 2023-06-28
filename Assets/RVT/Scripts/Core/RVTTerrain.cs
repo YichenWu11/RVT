@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Profiling;
-using UnityEngine.Rendering;
 
 public class RVTTerrain : MonoBehaviour
 {
@@ -20,6 +19,8 @@ public class RVTTerrain : MonoBehaviour
 
     // 贴图绘制材质
     public Material DrawTextureMaterial;
+
+    private readonly int _feedbackInterval = 8;
 
     private readonly RenderTask _renderTask = new();
 
@@ -75,14 +76,16 @@ public class RVTTerrain : MonoBehaviour
     {
         if (EnableUseRVTLit) Shader.EnableKeyword("_USE_RVT_LIT");
         else Shader.DisableKeyword("_USE_RVT_LIT");
-
         if (!EnableRVTUpdate) return;
 
         Profiler.BeginSample("RVT");
         _feedbackReader.UpdateRequest();
-        if (_feedbackReader.CanRead)
+        if (_feedbackReader.CanRead && Time.frameCount % _feedbackInterval == 0)
         {
+            Profiler.BeginSample("Feedback Render");
             _feedbackRenderer.FeedbackCamera.Render();
+            Profiler.EndSample();
+
             _feedbackReader.ReadbackRequest(_feedbackRenderer.TargetTexture);
         }
 
@@ -101,17 +104,18 @@ public class RVTTerrain : MonoBehaviour
         y -= y % perCellSize;
 
         var boundOffset =
-            _tiledTexture.BoundSize * perCellSize * (regionRect.width / PageTable.TableSize) /
-            _tiledTexture.TileSize;
+            (float)_tiledTexture.BoundSize / _tiledTexture.TileSize * perCellSize *
+            (regionRect.width / PageTable.TableSize);
+
         var realRect = new Rect(
             regionRect.xMin + (float)x / PageTable.TableSize * regionRect.width - boundOffset,
             regionRect.yMin + (float)y / PageTable.TableSize * regionRect.height - boundOffset,
             regionRect.width / PageTable.TableSize * perCellSize + 2.0f * boundOffset,
             regionRect.width / PageTable.TableSize * perCellSize + 2.0f * boundOffset);
-        var terrainRect = Rect.zero;
 
         foreach (var terrain in TerrainList)
         {
+            var terrainRect = Rect.zero;
             terrainRect.xMin = terrain.transform.position.x;
             terrainRect.yMin = terrain.transform.position.z;
             terrainRect.width = terrain.terrainData.size.x;
@@ -179,9 +183,9 @@ public class RVTTerrain : MonoBehaviour
                 DrawTextureMaterial.SetTexture($"_Normal{layerIndex + 1}", layer.normalMapTexture);
             }
 
-            var cmd = new CommandBuffer();
-            cmd.DrawMesh(_quadMesh, Matrix4x4.identity, DrawTextureMaterial, 0);
-            Graphics.ExecuteCommandBuffer(cmd);
+            // active pass 0 of material
+            DrawTextureMaterial.SetPass(0);
+            Graphics.DrawMeshNow(_quadMesh, Matrix4x4.identity);
         }
     }
 }

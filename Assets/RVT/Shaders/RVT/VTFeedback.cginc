@@ -82,12 +82,12 @@ float4 VTFragFeedback(feedback_v2f i) : SV_Target
         w : height
  */
 
-float4 GetMaxFeedback(float2 uv, int count)
+float4 GetMaxFeedback(float2 uv, int N)
 {
     float4 color = float4(1, 1, 1, 1);
-    for (int y = 0; y < count; y++)
+    for (int x = 0; x < N; x++)
     {
-        for (int x = 0; x < count; x++)
+        for (int y = 0; y < N; y++)
         {
             float4 color1 = tex2D(_MainTex, uv + float2(_MainTex_TexelSize.x * x, _MainTex_TexelSize.y * y));
             // 取 mipmapLevel 最小的 pixel

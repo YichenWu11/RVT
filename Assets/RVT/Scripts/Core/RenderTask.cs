@@ -23,7 +23,7 @@ public class RenderRequest
 public class RenderTask
 {
     // 每帧处理数量限制
-    private readonly int _limit = 2;
+    private readonly int _limit = 4;
 
     // 等待处理的请求
     private readonly List<RenderRequest> _pendingRequests = new();
