@@ -22,6 +22,8 @@ float4 _TileOffset4;
 
 sampler2D _Decal0;
 
+float4 _DecalOffset0;
+
 struct pixelOutput_drawTex
 {
     float4 col0 : COLOR0;
@@ -77,6 +79,13 @@ pixelOutput_drawTex decalFrag(v2f_drawTex i) : SV_Target
 {
     float4 blend = tex2D(_Blend, i.uv * _BlendTile.xy + _BlendTile.zw);
 
+    float2 decalUV = i.uv * _DecalOffset0.xy + _DecalOffset0.zw;
+
+    // decalUV =
+    //     float2(clamp(i.uv.x + _DecalOffset0.z, 0.0f, 1.0f),
+    //            clamp(i.uv.y + _DecalOffset0.w, 0.0f, 1.0f));
+
+
     float4 decal0 = tex2D(_Decal0, i.uv);
 
     float2 transUv = i.uv * _TileOffset1.xy + _TileOffset1.zw;
@@ -98,6 +107,7 @@ pixelOutput_drawTex decalFrag(v2f_drawTex i) : SV_Target
     pixelOutput_drawTex o;
     float4 color = blend.r * diffuse1 + blend.g * diffuse2 + blend.b * diffuse3 + blend.a * diffuse4;
     color.rgb += decal0.rgb * decal0.a;
+    // color = float4(_DecalOffset0.rg, 0.0, 1.0);
     o.col0 = color;
     o.col1 = blend.r * normal1 + blend.g * normal2 + blend.b * normal3 + blend.a * normal4;
     return o;

@@ -17,7 +17,7 @@ public class PageTable : MonoBehaviour
     private readonly Dictionary<Vector2Int, PageLevelTableNode> _activePages = new();
 
     // 导出的页表寻址贴图
-    private Texture2D _lookupTexture;
+    [HideInInspector] public Texture2D _lookupTexture;
 
     // 页表层级结构
     private PageLevelTable[] _pageTable;
@@ -29,7 +29,7 @@ public class PageTable : MonoBehaviour
     private TiledTexture _tileTexture;
 
     // 调试贴图
-    public RenderTexture DebugTexture { get; private set; }
+    private RenderTexture DebugTexture { get; set; }
 
     // 页表尺寸.
     public int TableSize => tableSize;

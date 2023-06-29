@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -6,6 +7,7 @@ public class RVTTerrain : MonoBehaviour
     private static readonly int VTRegionRect = Shader.PropertyToID("_VTRegionRect");
     private static readonly int BlendTile = Shader.PropertyToID("_BlendTile");
     private static readonly int Blend = Shader.PropertyToID("_Blend");
+    private static readonly int DecalOffset0 = Shader.PropertyToID("_DecalOffset0");
 
     // RVT Settings
     [Header("RVT Settings")] public bool EnableRVTUpdate = true;
@@ -95,6 +97,20 @@ public class RVTTerrain : MonoBehaviour
 
     private void DrawTiledTexture(RectInt drawPos, RenderRequest request)
     {
+        DrawTiledTextureImpl(drawPos, request);
+    }
+
+    public void DrawDecalToTiledTexture(RectInt drawPos, RenderRequest request, DecalRenderer.DecalInfo decalInfo)
+    {
+        DrawTiledTextureImpl(drawPos, request, true, decalInfo);
+    }
+
+    private void DrawTiledTextureImpl(
+        RectInt drawPos,
+        RenderRequest request,
+        bool decal = false,
+        DecalRenderer.DecalInfo decalInfo = null)
+    {
         var x = request.PageX;
         var y = request.PageY;
         var perCellSize = (int)Mathf.Pow(2, request.MipLevel);
@@ -170,13 +186,21 @@ public class RVTTerrain : MonoBehaviour
             drawTextureMaterial.SetTexture($"_Normal{layerIndex + 1}", layer.normalMapTexture);
         }
 
-        // active pass 0 or 1 of material
-        drawTextureMaterial.SetPass(_decalRenderer.ShouldDrawDecal(new Vector2Int(drawPos.xMin, drawPos.yMin)) ? 1 : 0);
+        if (decalInfo != null)
+        {
+            var decalScale = Mathf.Pow(2, decalInfo.mipLevel);
+            Shader.SetGlobalVector(DecalOffset0, new Vector4(
+                decalScale, decalScale, decalInfo.innerOffset.x, decalInfo.innerOffset.x
+            ));
+        }
 
+        // active pass 0 or 1 of material
+        drawTextureMaterial.SetPass(decal ? 1 : 0);
+        // TODO: batching
         Graphics.DrawMeshNow(_quadMesh, Matrix4x4.identity);
     }
 
-    public void Reset()
+    public void ResetVT()
     {
         _tiledTexture.Reset();
         _VTTileBuffer = new RenderBuffer[2];

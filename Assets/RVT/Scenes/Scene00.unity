@@ -576,7 +576,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b443f408cd519f46a850f99db11ed70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mipmapBias: 0
 --- !u!114 &982010936
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -591,6 +590,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tableSize: 64
   debugMaterial: {fileID: 2100000, guid: ea27778d245979040a97af433b30320a, type: 2}
+  _lookupTexture: {fileID: 0}
 --- !u!114 &982010937
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -609,6 +609,7 @@ MonoBehaviour:
     y: 0
     width: 1024
     height: 1024
+  EnableDecalRender: 1
 --- !u!1 &1042161576
 GameObject:
   m_ObjectHideFlags: 0
