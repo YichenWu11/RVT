@@ -609,7 +609,7 @@ MonoBehaviour:
     y: 0
     width: 1024
     height: 1024
-  EnableDecalRender: 1
+  EnableDecalRender: 0
 --- !u!1 &1042161576
 GameObject:
   m_ObjectHideFlags: 0

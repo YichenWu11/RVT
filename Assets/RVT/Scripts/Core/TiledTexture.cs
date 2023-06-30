@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 public class TiledTexture : MonoBehaviour
 {
@@ -37,6 +38,8 @@ public class TiledTexture : MonoBehaviour
     // 画 Tile 的事件
     public event Action<RectInt, RenderRequest> DrawTexture;
 
+    private Rect _destRect;
+
     public void Init()
     {
         _tilePool.Init(RegionSize.x * RegionSize.y);
@@ -67,6 +70,8 @@ public class TiledTexture : MonoBehaviour
                 TileSize,
                 RegionSize.x * TileSizeWithBound,
                 RegionSize.y * TileSizeWithBound));
+
+        _destRect = new Rect(0, 0, RegionSize.x * TileSizeWithBound, RegionSize.y * TileSizeWithBound);
     }
 
     public Vector2Int RequestTile()
@@ -92,6 +97,11 @@ public class TiledTexture : MonoBehaviour
                 TileSizeWithBound),
             request);
         OnTileUpdateComplete?.Invoke(tile);
+    }
+
+    public void CompressBC3()
+    {
+        throw new NotImplementedException();
     }
 
     public void Reset()

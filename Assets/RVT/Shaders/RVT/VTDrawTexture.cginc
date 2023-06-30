@@ -1,6 +1,7 @@
 ﻿#ifndef VIRTUAL_DRAW_TEXTURE_INCLUDED
 #define VIRTUAL_DRAW_TEXTURE_INCLUDED
 
+// Texture2D _Diffuse1;
 sampler2D _Diffuse1;
 sampler2D _Diffuse2;
 sampler2D _Diffuse3;
@@ -40,10 +41,13 @@ v2f_drawTex vert(appdata_img v)
 {
     v2f_drawTex o;
     o.pos = mul(_ImageMVP, v.vertex);
+    // o.pos = v.vertex;
     o.uv = v.texcoord;
 
     return o;
 }
+
+SamplerState sampler_LinearRepeat;
 
 pixelOutput_drawTex frag(v2f_drawTex i) : SV_Target
 {
@@ -51,21 +55,39 @@ pixelOutput_drawTex frag(v2f_drawTex i) : SV_Target
 
     float4 decal0 = tex2D(_Decal0, i.uv);
 
+    int mip_level = 0;
     float2 transUv = i.uv * _TileOffset1.xy + _TileOffset1.zw;
-    float4 diffuse1 = tex2Dlod(_Diffuse1, float4(transUv, 0, 0));
-    float4 normal1 = tex2Dlod(_Normal1, float4(transUv, 0, 0));
+    float4 diffuse1 = tex2Dlod(_Diffuse1, float4(transUv, 0, mip_level));
+    // float4 diffuse1 = _Diffuse1.SampleLevel(sampler_LinearRepeat, transUv, mip_level);
+    float4 normal1 = tex2Dlod(_Normal1, float4(transUv, 0, mip_level));
 
     transUv = i.uv * _TileOffset2.xy + _TileOffset2.zw;
-    float4 diffuse2 = tex2Dlod(_Diffuse2, float4(transUv, 0, 0));
-    float4 normal2 = tex2Dlod(_Normal2, float4(transUv, 0, 0));
+    float4 diffuse2 = tex2Dlod(_Diffuse2, float4(transUv, 0, mip_level));
+    float4 normal2 = tex2Dlod(_Normal2, float4(transUv, 0, mip_level));
 
     transUv = i.uv * _TileOffset3.xy + _TileOffset3.zw;
-    float4 diffuse3 = tex2Dlod(_Diffuse3, float4(transUv, 0, 0));
-    float4 normal3 = tex2Dlod(_Normal3, float4(transUv, 0, 0));
+    float4 diffuse3 = tex2Dlod(_Diffuse3, float4(transUv, 0, mip_level));
+    float4 normal3 = tex2Dlod(_Normal3, float4(transUv, 0, mip_level));
 
     transUv = i.uv * _TileOffset4.xy + _TileOffset4.zw;
-    float4 diffuse4 = tex2Dlod(_Diffuse4, float4(transUv, 0, 0));
-    float4 normal4 = tex2Dlod(_Normal4, float4(transUv, 0, 0));
+    float4 diffuse4 = tex2Dlod(_Diffuse4, float4(transUv, 0, mip_level));
+    float4 normal4 = tex2Dlod(_Normal4, float4(transUv, 0, mip_level));
+
+    // float2 transUv = i.uv * _TileOffset1.xy + _TileOffset1.zw;
+    // float4 diffuse1 = tex2D(_Diffuse1, transUv);
+    // float4 normal1 = tex2D(_Normal1, transUv);
+    //
+    // transUv = i.uv * _TileOffset2.xy + _TileOffset2.zw;
+    // float4 diffuse2 = tex2D(_Diffuse2, transUv);
+    // float4 normal2 = tex2D(_Normal2, transUv);
+    //
+    // transUv = i.uv * _TileOffset3.xy + _TileOffset3.zw;
+    // float4 diffuse3 = tex2D(_Diffuse3, transUv);
+    // float4 normal3 = tex2D(_Normal3, transUv);
+    //
+    // transUv = i.uv * _TileOffset4.xy + _TileOffset4.zw;
+    // float4 diffuse4 = tex2D(_Diffuse4, transUv);
+    // float4 normal4 = tex2D(_Normal4, transUv);
 
     pixelOutput_drawTex o;
     float4 color = blend.r * diffuse1 + blend.g * diffuse2 + blend.b * diffuse3 + blend.a * diffuse4;
@@ -88,21 +110,39 @@ pixelOutput_drawTex decalFrag(v2f_drawTex i) : SV_Target
 
     float4 decal0 = tex2D(_Decal0, i.uv);
 
+    int mip_level = 0;
     float2 transUv = i.uv * _TileOffset1.xy + _TileOffset1.zw;
-    float4 diffuse1 = tex2Dlod(_Diffuse1, float4(transUv, 0, 0));
-    float4 normal1 = tex2Dlod(_Normal1, float4(transUv, 0, 0));
+    float4 diffuse1 = tex2Dlod(_Diffuse1, float4(transUv, 0, mip_level));
+    // float4 diffuse1 = _Diffuse1.SampleLevel(sampler_LinearRepeat, transUv, 0);
+    float4 normal1 = tex2Dlod(_Normal1, float4(transUv, 0, mip_level));
 
     transUv = i.uv * _TileOffset2.xy + _TileOffset2.zw;
-    float4 diffuse2 = tex2Dlod(_Diffuse2, float4(transUv, 0, 0));
-    float4 normal2 = tex2Dlod(_Normal2, float4(transUv, 0, 0));
+    float4 diffuse2 = tex2Dlod(_Diffuse2, float4(transUv, 0, mip_level));
+    float4 normal2 = tex2Dlod(_Normal2, float4(transUv, 0, mip_level));
 
     transUv = i.uv * _TileOffset3.xy + _TileOffset3.zw;
-    float4 diffuse3 = tex2Dlod(_Diffuse3, float4(transUv, 0, 0));
-    float4 normal3 = tex2Dlod(_Normal3, float4(transUv, 0, 0));
+    float4 diffuse3 = tex2Dlod(_Diffuse3, float4(transUv, 0, mip_level));
+    float4 normal3 = tex2Dlod(_Normal3, float4(transUv, 0, mip_level));
 
     transUv = i.uv * _TileOffset4.xy + _TileOffset4.zw;
-    float4 diffuse4 = tex2Dlod(_Diffuse4, float4(transUv, 0, 0));
-    float4 normal4 = tex2Dlod(_Normal4, float4(transUv, 0, 0));
+    float4 diffuse4 = tex2Dlod(_Diffuse4, float4(transUv, 0, mip_level));
+    float4 normal4 = tex2Dlod(_Normal4, float4(transUv, 0, mip_level));
+
+    // float2 transUv = i.uv * _TileOffset1.xy + _TileOffset1.zw;
+    // float4 diffuse1 = tex2D(_Diffuse1, transUv);
+    // float4 normal1 = tex2D(_Normal1, transUv);
+    //
+    // transUv = i.uv * _TileOffset2.xy + _TileOffset2.zw;
+    // float4 diffuse2 = tex2D(_Diffuse2, transUv);
+    // float4 normal2 = tex2D(_Normal2, transUv);
+    //
+    // transUv = i.uv * _TileOffset3.xy + _TileOffset3.zw;
+    // float4 diffuse3 = tex2D(_Diffuse3, transUv);
+    // float4 normal3 = tex2D(_Normal3, transUv);
+    //
+    // transUv = i.uv * _TileOffset4.xy + _TileOffset4.zw;
+    // float4 diffuse4 = tex2D(_Diffuse4, transUv);
+    // float4 normal4 = tex2D(_Normal4, transUv);
 
     pixelOutput_drawTex o;
     float4 color = blend.r * diffuse1 + blend.g * diffuse2 + blend.b * diffuse3 + blend.a * diffuse4;

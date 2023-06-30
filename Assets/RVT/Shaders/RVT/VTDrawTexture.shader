@@ -31,7 +31,7 @@
         Pass
         {
             CGPROGRAM
-			#pragma target 3.0
+			#pragma target 3.5
 
             #pragma vertex vert
             #pragma fragment frag
@@ -46,7 +46,7 @@
         	Tags { "LightMode" = "VTDecalRenderer" }
         	
             CGPROGRAM
-			#pragma target 3.0
+			#pragma target 3.5
 
             #pragma vertex vert
             #pragma fragment decalFrag

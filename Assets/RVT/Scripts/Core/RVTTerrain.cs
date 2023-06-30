@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -146,8 +147,8 @@ public class RVTTerrain : MonoBehaviour
         needDrawRect.yMax = Mathf.Min(realRect.yMax, terrainRect.yMax);
 
         var scaleFactor = drawPos.width / realRect.width;
-        var position = new Rect(drawPos.x + (needDrawRect.xMin - realRect.xMin) * scaleFactor,
-            drawPos.y + (needDrawRect.yMin - realRect.yMin) * scaleFactor,
+        var posRect = new Rect(drawPos.x,
+            drawPos.y,
             needDrawRect.width * scaleFactor,
             needDrawRect.height * scaleFactor);
         var blendOffset = new Vector4(
@@ -156,11 +157,7 @@ public class RVTTerrain : MonoBehaviour
             (needDrawRect.xMin - terrainRect.xMin) / terrainRect.width,
             (needDrawRect.yMin - terrainRect.yMin) / terrainRect.height);
 
-        var l = position.x * 2.0f / _tiledTextureSize.x - 1;
-        var r = (position.x + position.width) * 2.0f / _tiledTextureSize.x - 1;
-        var b = position.y * 2.0f / _tiledTextureSize.y - 1;
-        var t = (position.y + position.height) * 2.0f / _tiledTextureSize.y - 1;
-        var mvpMatrix = Util.GetTileMatrix(l, r, b, t);
+        var mvpMatrix = Util.GetTileMatrix(posRect, _tiledTextureSize);
 
         Graphics.SetRenderTarget(_VTTileBuffer, _VTDepthBuffer);
         // drawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"), mvpMatrix);

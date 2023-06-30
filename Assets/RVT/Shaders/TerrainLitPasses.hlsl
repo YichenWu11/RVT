@@ -352,7 +352,7 @@ half4 ComputeRVTColor(Varyings IN)
     InitializeInputData(IN, normalTS, inputData);
 
     const half metallic = 0.0h;
-    const half smoothness = 0.1h;
+    const half smoothness = 0.0h;
     const half occlusion = 1.0h;
 
     half4 color = UniversalFragmentPBR(inputData, albedo, metallic, /* specular */ half3(0.0h, 0.0h, 0.0h), smoothness,
@@ -362,7 +362,7 @@ half4 ComputeRVTColor(Varyings IN)
     return half4(color.rgb, 1.0h);
     // return half4(page.rg / 255.0f, 0.0h, 1.0h);
     // return half4(ini_color.rgb, 1.0h);
-    // return half4(unity_FogColor.rgb, 1.0h);
+    // return half4(tex2D(_VTDiffuse, IN.iniUV).rgb, 1.0h);
 }
 
 // Used in Standard Terrain shader
@@ -479,8 +479,8 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
 
     SplatmapFinalColor(color, inputData.fogCoord);
 
-    // return half4(color.rgb, 1.0h);
-    return half4(splatControl.rgb, 1.0h);
+    return half4(color.rgb, 1.0h);
+    // return half4(splatControl.rgb, 1.0h);
     // return half4(page / 255.0, 0.0h, 1.0h);
     #endif
 }

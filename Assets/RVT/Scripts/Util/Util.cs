@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
@@ -110,8 +111,12 @@ public class Util
         return n - Mathf.FloorToInt(n);
     }
 
-    public static Matrix4x4 GetTileMatrix(float l, float r, float b, float t)
+    public static Matrix4x4 GetTileMatrix(Rect posRect, Vector2Int vtSize)
     {
+        var l = posRect.x / vtSize.x * 2.0f - 1;
+        var r = (posRect.x + posRect.width) / vtSize.x * 2.0f - 1;
+        var b = posRect.y / vtSize.y * 2.0f - 1;
+        var t = (posRect.y + posRect.height) / vtSize.y * 2.0f - 1;
         return new Matrix4x4
         {
             m00 = r - l,
