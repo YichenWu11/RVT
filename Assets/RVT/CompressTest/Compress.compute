@@ -1,0 +1,32 @@
+#include "ETCCompress.hlsl"
+#include "BCCompress.hlsl"
+
+#pragma multi_compile _COMPRESS_BC3 _
+#pragma kernel CSMain
+
+RWTexture2D<uint4> Result;
+Texture2D<float4> RenderTexture0;
+SamplerState samplerRenderTexture0;
+uint4 DestRect;
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 ThreadId : SV_DispatchThreadID)
+{
+    uint2 SamplePos = ThreadId.xy * 4;
+    if (any(SamplePos >= DestRect.zw))
+        return;
+
+    float2 TexelUVSize = 1.f / float2(DestRect.zw);
+    float2 SampleUV = (float2(SamplePos) + 0.5f) * TexelUVSize;
+
+    float3 BlockBaseColor[16];
+    ReadBlockRGB(RenderTexture0, samplerRenderTexture0, SampleUV, TexelUVSize, BlockBaseColor);
+
+    float BlockA[16];
+    for (int i = 0; i < 16; i++)
+    {
+        BlockA[i] = 1;
+    }
+
+    Result[ThreadId.xy] = CompressBC3Block_SRGB(BlockBaseColor, BlockA);
+}
