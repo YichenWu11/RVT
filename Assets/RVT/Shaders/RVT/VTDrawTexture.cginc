@@ -1,8 +1,8 @@
 ﻿#ifndef VIRTUAL_DRAW_TEXTURE_INCLUDED
 #define VIRTUAL_DRAW_TEXTURE_INCLUDED
 
-// Texture2D _Diffuse1;
-sampler2D _Diffuse1;
+Texture2D _Diffuse1;
+// sampler2D _Diffuse1;
 sampler2D _Diffuse2;
 sampler2D _Diffuse3;
 sampler2D _Diffuse4;
@@ -10,6 +10,8 @@ sampler2D _Normal1;
 sampler2D _Normal2;
 sampler2D _Normal3;
 sampler2D _Normal4;
+
+SamplerState sampler_Diffuse1;
 
 float4x4 _ImageMVP;
 
@@ -57,8 +59,8 @@ pixelOutput_drawTex frag(v2f_drawTex i) : SV_Target
 
     int mip_level = 0;
     float2 transUv = i.uv * _TileOffset1.xy + _TileOffset1.zw;
-    float4 diffuse1 = tex2Dlod(_Diffuse1, float4(transUv, 0, mip_level));
-    // float4 diffuse1 = _Diffuse1.SampleLevel(sampler_LinearRepeat, transUv, mip_level);
+    // float4 diffuse1 = tex2Dlod(_Diffuse1, float4(transUv, 0, mip_level));
+    float4 diffuse1 = _Diffuse1.SampleLevel(sampler_Diffuse1, transUv, mip_level);
     float4 normal1 = tex2Dlod(_Normal1, float4(transUv, 0, mip_level));
 
     transUv = i.uv * _TileOffset2.xy + _TileOffset2.zw;
@@ -112,8 +114,8 @@ pixelOutput_drawTex decalFrag(v2f_drawTex i) : SV_Target
 
     int mip_level = 0;
     float2 transUv = i.uv * _TileOffset1.xy + _TileOffset1.zw;
-    float4 diffuse1 = tex2Dlod(_Diffuse1, float4(transUv, 0, mip_level));
-    // float4 diffuse1 = _Diffuse1.SampleLevel(sampler_LinearRepeat, transUv, 0);
+    // float4 diffuse1 = tex2Dlod(_Diffuse1, float4(transUv, 0, mip_level));
+    float4 diffuse1 = _Diffuse1.SampleLevel(sampler_Diffuse1, transUv, 0);
     float4 normal1 = tex2Dlod(_Normal1, float4(transUv, 0, mip_level));
 
     transUv = i.uv * _TileOffset2.xy + _TileOffset2.zw;

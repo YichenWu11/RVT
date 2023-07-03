@@ -35,7 +35,8 @@ Shader "Klay/UnlitTest"
             sampler2D _MainTex;
             float4 _MainTex_ST;
 
-            sampler2D _Compressed;
+            Texture2D _Compressed;
+            SamplerState sampler_Compressed;
 
             v2f vert (appdata v)
             {
@@ -45,23 +46,10 @@ Shader "Klay/UnlitTest"
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
-
-            float4 decodeDXT5(float4 color)
+            
+            float4 frag (v2f i) : SV_Target
             {
-                // 解压缩纹理数据
-                float3 c0 = color.rgb;
-                float3 c1 = color.a * float3(1, 1, 1);
-                float3 c2 = (2 * c0.rgb + c1.rgb) / 3;
-                float3 c3 = (c0.rgb + 2 * c1.rgb) / 3;
-
-                // 返回解压缩后的颜色值
-                return float4(c2.rgb, c3.r);
-            }
-
-            fixed4 frag (v2f i) : SV_Target
-            {
-                fixed4 col = tex2D(_Compressed, i.uv);
-                // return decodeDXT5(col);
+                fixed4 col = _Compressed.Sample(sampler_Compressed, i.uv);
                 return col;
             }
             ENDCG

@@ -3,8 +3,8 @@
 #pragma multi_compile _COMPRESS_BC3 _
 #pragma kernel CSMain
 RWTexture2D<uint4> Result;
-Texture2D RenderTexture0;
-SamplerState samplerRenderTexture0;
+Texture2D RT0;
+SamplerState samplerRT0;
 uint4 DestRect;
 
 [numthreads(8, 8, 1)]
@@ -18,7 +18,7 @@ void CSMain(uint3 ThreadId : SV_DispatchThreadID)
     float2 SampleUV = (float2(SamplePos) + 0.5f) * TexelUVSize;
 
     float3 BlockBaseColor[16];
-    ReadBlockRGB(RenderTexture0, samplerRenderTexture0, SampleUV, TexelUVSize, BlockBaseColor);
+    ReadBlockRGB(RT0, samplerRT0, SampleUV, TexelUVSize, BlockBaseColor);
 
     float BlockA[16];
     for (int i = 0; i < 16; i++)

@@ -287,7 +287,7 @@ MonoBehaviour:
   compressed2D: {fileID: 0}
   mat0: {fileID: 2100000, guid: f215a411e8a566a42b0559b1857142b9, type: 2}
   mat1: {fileID: 2100000, guid: c75a1d6470ed25b40ad455248d33c704, type: 2}
-  shader: {fileID: 7200000, guid: dcc04bf47121b0d49bad29f675ee9d4a, type: 3}
+  shader: {fileID: 7200000, guid: ff10271661913b84b98063ac34b9877a, type: 3}
 --- !u!1 &1088975807
 GameObject:
   m_ObjectHideFlags: 0
