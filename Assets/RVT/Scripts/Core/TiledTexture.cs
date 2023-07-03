@@ -23,6 +23,7 @@ public class TiledTexture : MonoBehaviour
     public int TileSizeWithBound => TileSize + boundSize * 2;
 
     public RenderTexture[] VTRTs { get; private set; }
+    public Texture2D[] VTs;
 
     // 区域尺寸
     public Vector2Int RegionSize => regionSize;
@@ -38,6 +39,8 @@ public class TiledTexture : MonoBehaviour
     // 画 Tile 的事件
     public event Action<RectInt, RenderRequest> DrawTexture;
 
+    public ComputeShader compressShader;
+
     private Rect _destRect;
 
     public void Init()
@@ -50,14 +53,33 @@ public class TiledTexture : MonoBehaviour
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp
         };
-        Shader.SetGlobalTexture(VTDiffuse, VTRTs[0]);
 
         VTRTs[1] = new RenderTexture(RegionSize.x * TileSizeWithBound, RegionSize.y * TileSizeWithBound, 0)
         {
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp
         };
-        Shader.SetGlobalTexture(VTNormal, VTRTs[1]);
+
+        VTs = new Texture2D[2];
+        VTs[0] = new Texture2D(
+            RegionSize.x * TileSizeWithBound,
+            RegionSize.x * TileSizeWithBound,
+            GraphicsFormat.RGBA_DXT5_UNorm, TextureCreationFlags.None);
+        VTs[1] = new Texture2D(
+            RegionSize.x * TileSizeWithBound,
+            RegionSize.x * TileSizeWithBound,
+            GraphicsFormat.RGBA_DXT5_UNorm, TextureCreationFlags.None);
+
+        if (GetComponent<RVTTerrain>().EnableVTCompression)
+        {
+            Shader.SetGlobalTexture(VTDiffuse, VTs[0]);
+            Shader.SetGlobalTexture(VTNormal, VTs[1]);
+        }
+        else
+        {
+            Shader.SetGlobalTexture(VTDiffuse, VTRTs[0]);
+            Shader.SetGlobalTexture(VTNormal, VTRTs[1]);
+        }
 
         // x: padding偏移量
         // y: tile有效区域的尺寸

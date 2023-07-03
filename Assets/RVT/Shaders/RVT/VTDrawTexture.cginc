@@ -24,8 +24,11 @@ float4 _TileOffset3;
 float4 _TileOffset4;
 
 sampler2D _Decal0;
-
 float4 _DecalOffset0;
+
+// albedo and normal of the compressed single tile
+sampler2D _TileAlbedo;
+sampler2D _TileNormal;
 
 struct pixelOutput_drawTex
 {
@@ -43,13 +46,10 @@ v2f_drawTex vert(appdata_img v)
 {
     v2f_drawTex o;
     o.pos = mul(_ImageMVP, v.vertex);
-    // o.pos = v.vertex;
     o.uv = v.texcoord;
 
     return o;
 }
-
-SamplerState sampler_LinearRepeat;
 
 pixelOutput_drawTex frag(v2f_drawTex i) : SV_Target
 {
@@ -99,6 +99,7 @@ pixelOutput_drawTex frag(v2f_drawTex i) : SV_Target
     return o;
 }
 
+// Decal
 pixelOutput_drawTex decalFrag(v2f_drawTex i) : SV_Target
 {
     float4 blend = tex2D(_Blend, i.uv * _BlendTile.xy + _BlendTile.zw);
@@ -152,6 +153,26 @@ pixelOutput_drawTex decalFrag(v2f_drawTex i) : SV_Target
     // color = float4(_DecalOffset0.rg, 0.0, 1.0);
     o.col0 = color;
     o.col1 = blend.r * normal1 + blend.g * normal2 + blend.b * normal3 + blend.a * normal4;
+    return o;
+}
+
+// Copy Tile To VT
+v2f_drawTex tileVert(appdata_img v)
+{
+    v2f_drawTex o;
+    o.pos = v.vertex;
+    o.uv = v.texcoord;
+
+    return o;
+}
+
+pixelOutput_drawTex copyFrag(v2f_drawTex i) : SV_Target
+{
+    int mip_level = 0;
+    pixelOutput_drawTex o;
+    // invert y pls
+    o.col0 = tex2Dlod(_TileAlbedo, float4(float2(i.uv.x, 1.0f - i.uv.y), 0, mip_level));
+    o.col1 = tex2Dlod(_TileNormal, float4(float2(i.uv.x, 1.0f - i.uv.y), 0, mip_level));
     return o;
 }
 

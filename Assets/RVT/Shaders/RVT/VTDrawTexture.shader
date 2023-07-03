@@ -48,8 +48,38 @@
             CGPROGRAM
 			#pragma target 3.5
 
-            #pragma vertex vert
+            #pragma vertex tileVert
             #pragma fragment decalFrag
+
+            #include "UnityCG.cginc"
+			#include "VTDrawTexture.cginc"
+            ENDCG
+        }
+    	
+    	Pass
+        {
+        	Tags { "LightMode" = "TileRenderer" }
+        	
+            CGPROGRAM
+			#pragma target 3.5
+
+            #pragma vertex tileVert
+            #pragma fragment frag
+
+            #include "UnityCG.cginc"
+			#include "VTDrawTexture.cginc"
+            ENDCG
+        }
+    	
+    	Pass
+        {
+        	Tags { "LightMode" = "CopyRenderer" }
+        	
+            CGPROGRAM
+			#pragma target 3.5
+
+            #pragma vertex vert
+            #pragma fragment copyFrag
 
             #include "UnityCG.cginc"
 			#include "VTDrawTexture.cginc"
