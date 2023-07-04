@@ -1,6 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
+#if UNITY_EDITOR
 [CustomEditor(typeof(FeedbackReader))]
 public class FeedbackReaderEditor : Editor
 {
@@ -17,3 +18,4 @@ public class FeedbackReaderEditor : Editor
         }
     }
 }
+#endif

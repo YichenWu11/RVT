@@ -201,14 +201,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 292535967}
-  m_LocalRotation: {x: 0.1841081, y: 0.03325497, z: -0.016242838, w: 0.982209}
-  m_LocalPosition: {x: 503.9, y: 4.1, z: 21.7}
+  m_LocalRotation: {x: 0.07959458, y: 0.031358507, z: -0.019656291, w: 0.99614006}
+  m_LocalPosition: {x: 702.1, y: -50.3, z: 67.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 21.269, y: 3.651, z: -1.209}
+  m_LocalEulerAnglesHint: {x: 9.196, y: 3.447, z: -1.984}
 --- !u!114 &292535972
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -451,7 +451,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   EnableRVTUpdate: 1
   EnableUseRVTLit: 1
-  EnableVTCompression: 0
+  EnableVTCompression: 1
   terrain: {fileID: 1042161578}
   regionRect:
     serializedVersion: 2
@@ -460,6 +460,7 @@ MonoBehaviour:
     width: 1024
     height: 1024
   drawTextureMaterial: {fileID: 2100000, guid: 26be0d72645c0b945ad4cb40b55d5458, type: 2}
+  flipMaterial: {fileID: 2100000, guid: 93a2d634ed895df4eba978613cb99f3c, type: 2}
   albedoTileRT: {fileID: 0}
   normalTileRT: {fileID: 0}
 --- !u!114 &982010931

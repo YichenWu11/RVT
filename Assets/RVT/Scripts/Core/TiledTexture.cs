@@ -23,7 +23,7 @@ public class TiledTexture : MonoBehaviour
     public int TileSizeWithBound => TileSize + boundSize * 2;
 
     public RenderTexture[] VTRTs { get; private set; }
-    public Texture2D[] VTs;
+    [HideInInspector] public Texture2D[] VTs;
 
     // 区域尺寸
     public Vector2Int RegionSize => regionSize;
@@ -50,36 +50,51 @@ public class TiledTexture : MonoBehaviour
         VTRTs = new RenderTexture[2];
         VTRTs[0] = new RenderTexture(RegionSize.x * TileSizeWithBound, RegionSize.y * TileSizeWithBound, 0)
         {
+            graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
             useMipMap = false,
-            wrapMode = TextureWrapMode.Clamp
+            wrapMode = TextureWrapMode.Clamp,
+            name = "AlbedoVT"
         };
 
         VTRTs[1] = new RenderTexture(RegionSize.x * TileSizeWithBound, RegionSize.y * TileSizeWithBound, 0)
         {
+            graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
             useMipMap = false,
-            wrapMode = TextureWrapMode.Clamp
+            wrapMode = TextureWrapMode.Clamp,
+            name = "NormalVT"
         };
 
         VTs = new Texture2D[2];
         VTs[0] = new Texture2D(
             RegionSize.x * TileSizeWithBound,
-            RegionSize.x * TileSizeWithBound,
-            GraphicsFormat.RGBA_DXT5_UNorm, TextureCreationFlags.None);
+            RegionSize.y * TileSizeWithBound,
+            GraphicsFormat.RGBA_DXT5_UNorm, TextureCreationFlags.None)
+        {
+            name = "CompressedAlbedoVT"
+        };
+
         VTs[1] = new Texture2D(
             RegionSize.x * TileSizeWithBound,
-            RegionSize.x * TileSizeWithBound,
-            GraphicsFormat.RGBA_DXT5_UNorm, TextureCreationFlags.None);
+            RegionSize.y * TileSizeWithBound,
+            GraphicsFormat.RGBA_DXT5_UNorm, TextureCreationFlags.None)
+        {
+            name = "CompressedNormalVT"
+        };
 
         if (GetComponent<RVTTerrain>().EnableVTCompression)
         {
             Shader.SetGlobalTexture(VTDiffuse, VTs[0]);
-            Shader.SetGlobalTexture(VTNormal, VTs[1]);
+            // Shader.SetGlobalTexture(VTNormal, VTs[1]);
+            Shader.SetGlobalTexture(VTNormal, VTRTs[1]);
         }
         else
         {
             Shader.SetGlobalTexture(VTDiffuse, VTRTs[0]);
             Shader.SetGlobalTexture(VTNormal, VTRTs[1]);
         }
+
+        VTs[0].Apply(true, true);
+        VTs[1].Apply(true, true);
 
         // x: padding偏移量
         // y: tile有效区域的尺寸

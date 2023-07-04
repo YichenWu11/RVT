@@ -1,8 +1,12 @@
 using System;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Profiling;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal.Internal;
+using UnityEngine.UI;
 
 public class RVTTerrain : MonoBehaviour
 {
@@ -25,6 +29,8 @@ public class RVTTerrain : MonoBehaviour
 
     // 贴图绘制材质
     public Material drawTextureMaterial;
+
+    public Material flipMaterial;
 
     private readonly int _feedbackInterval = 8;
 
@@ -81,12 +87,14 @@ public class RVTTerrain : MonoBehaviour
 
         albedoTileRT = new RenderTexture(_tiledTexture.TileSizeWithBound, _tiledTexture.TileSizeWithBound, 0)
         {
+            graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp
         };
         albedoTileRT.Create();
         normalTileRT = new RenderTexture(_tiledTexture.TileSizeWithBound, _tiledTexture.TileSizeWithBound, 0)
         {
+            graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp
         };
@@ -125,13 +133,9 @@ public class RVTTerrain : MonoBehaviour
         Profiler.EndSample();
     }
 
-    private int temp = 0;
-
     private void DrawTiledTexture(RectInt drawPos, RenderRequest request)
     {
-        // if (temp > 10) return;
-        DrawTiledTextureImplAno(drawPos, request);
-        // temp++;
+        DrawTiledTextureImpl(drawPos, request);
     }
 
     public void DrawDecalToTiledTexture(RectInt drawPos, RenderRequest request, DecalRenderer.DecalInfo decalInfo)
@@ -139,98 +143,9 @@ public class RVTTerrain : MonoBehaviour
         DrawTiledTextureImpl(drawPos, request, true, decalInfo);
     }
 
-    private void DrawTiledTextureImpl(
-        RectInt drawPos,
-        RenderRequest request,
-        bool decal = false,
-        DecalRenderer.DecalInfo decalInfo = null)
-    {
-        // var x = request.PageX;
-        // var y = request.PageY;
-        // var perCellSize = (int)Mathf.Pow(2, request.MipLevel);
-        //
-        // // 转换到对应 Mip 层级页表上格子坐标
-        // x -= x % perCellSize;
-        // y -= y % perCellSize;
-        //
-        // var boundOffset =
-        //     (float)_tiledTexture.BoundSize / _tiledTexture.TileSize * perCellSize *
-        //     (regionRect.width / _pageTable.TableSize);
-        //
-        // var realRect = new Rect(
-        //     regionRect.xMin + (float)x / _pageTable.TableSize * regionRect.width - boundOffset,
-        //     regionRect.yMin + (float)y / _pageTable.TableSize * regionRect.height - boundOffset,
-        //     regionRect.width / _pageTable.TableSize * perCellSize + 2.0f * boundOffset,
-        //     regionRect.width / _pageTable.TableSize * perCellSize + 2.0f * boundOffset);
-        //
-        //
-        // var terrainRect = Rect.zero;
-        // terrainRect.xMin = terrain.transform.position.x;
-        // terrainRect.yMin = terrain.transform.position.z;
-        // terrainRect.width = terrain.terrainData.size.x;
-        // terrainRect.height = terrain.terrainData.size.z;
-        //
-        // if (!realRect.Overlaps(terrainRect))
-        //     return;
-        //
-        // var needDrawRect = realRect;
-        // needDrawRect.xMin = Mathf.Max(realRect.xMin, terrainRect.xMin);
-        // needDrawRect.yMin = Mathf.Max(realRect.yMin, terrainRect.yMin);
-        // needDrawRect.xMax = Mathf.Min(realRect.xMax, terrainRect.xMax);
-        // needDrawRect.yMax = Mathf.Min(realRect.yMax, terrainRect.yMax);
-        //
-        // var scaleFactor = drawPos.width / realRect.width;
-        // var posRect = new Rect(drawPos.x,
-        //     drawPos.y,
-        //     needDrawRect.width * scaleFactor,
-        //     needDrawRect.height * scaleFactor);
-        // var blendOffset = new Vector4(
-        //     needDrawRect.width / terrainRect.width,
-        //     needDrawRect.height / terrainRect.height,
-        //     (needDrawRect.xMin - terrainRect.xMin) / terrainRect.width,
-        //     (needDrawRect.yMin - terrainRect.yMin) / terrainRect.height);
-        //
-        // var mvpMatrix = Util.GetTileMatrix(posRect, _tiledTextureSize);
-        //
-        // Graphics.SetRenderTarget(_VTTileBuffer, _VTDepthBuffer);
-        // // drawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"), mvpMatrix);
-        // drawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"), GL.GetGPUProjectionMatrix(mvpMatrix, true));
-        // drawTextureMaterial.SetVector(BlendTile, blendOffset);
-        //
-        // var alphamap = terrain.terrainData.alphamapTextures[0];
-        // drawTextureMaterial.SetTexture(Blend, alphamap);
-        //
-        // var terrainData = terrain.terrainData;
-        // const float tileTexScale = 10.0f;
-        // var tileOffset = new Vector4(
-        //     terrainData.size.x / tileTexScale * blendOffset.x,
-        //     terrainData.size.z / tileTexScale * blendOffset.y,
-        //     terrainData.size.x / tileTexScale * blendOffset.z,
-        //     terrainData.size.z / tileTexScale * blendOffset.w);
-        //
-        // for (var layerIndex = 0; layerIndex < terrain.terrainData.terrainLayers.Length; layerIndex++)
-        // {
-        //     var layer = terrainData.terrainLayers[layerIndex];
-        //     drawTextureMaterial.SetVector($"_TileOffset{layerIndex + 1}", tileOffset);
-        //     drawTextureMaterial.SetTexture($"_Diffuse{layerIndex + 1}", layer.diffuseTexture);
-        //     drawTextureMaterial.SetTexture($"_Normal{layerIndex + 1}", layer.normalMapTexture);
-        // }
-        //
-        // if (decalInfo != null)
-        // {
-        //     var decalScale = Mathf.Pow(2, decalInfo.mipLevel);
-        //     Shader.SetGlobalVector(DecalOffset0, new Vector4(
-        //         decalScale, decalScale, decalInfo.innerOffset.x, decalInfo.innerOffset.x
-        //     ));
-        // }
-        //
-        // // active pass 0 or 1 of material
-        // drawTextureMaterial.SetPass(decal ? 1 : 0);
-        // // TODO: batching
-        // Graphics.DrawMeshNow(_quadMesh, Matrix4x4.identity);
-    }
+    // [HideInInspector] public Texture2D debugTex2D;
 
-    private void DrawTiledTextureImplAno(
+    private void DrawTiledTextureImpl(
         RectInt drawPos,
         RenderRequest request,
         bool decal = false,
@@ -305,61 +220,105 @@ public class RVTTerrain : MonoBehaviour
             drawTextureMaterial.SetTexture($"_Normal{layerIndex + 1}", layer.normalMapTexture);
         }
 
-        drawTextureMaterial.SetPass(2);
+        if (decalInfo != null)
+        {
+            var decalScale = Mathf.Pow(2, decalInfo.mipLevel);
+            Shader.SetGlobalVector(DecalOffset0, new Vector4(
+                decalScale, decalScale, decalInfo.innerOffset.x, decalInfo.innerOffset.x
+            ));
+        }
+
+        // active pass 0 or 1 of material
+        drawTextureMaterial.SetPass(decal ? 1 : 2);
         Graphics.DrawMeshNow(_fullScreenQuadMesh, Matrix4x4.identity);
 
         #endregion
 
         #region Copy Tile To TiledTexture
 
+        var tileX = drawPos.xMin / _tiledTexture.TileSizeWithBound;
+        var tileY = drawPos.yMin / _tiledTexture.TileSizeWithBound;
+
         if (EnableVTCompression)
         {
-            // compress
-            var compressAlbedoTile = TextureCompressUtil.CompressRT2RT(_tiledTexture.compressShader, albedoTileRT);
-            var compressNormalTile = TextureCompressUtil.CompressRT2RT(_tiledTexture.compressShader, normalTileRT);
+            /*
+             * 存在问题
+             * 使用 BC3 压缩法线时结果错误导致结果变暗
+             */
 
-            // copy 2 vt
-            var tileX = drawPos.xMin / _tiledTexture.TileSizeWithBound;
-            var tileY = drawPos.yMin / _tiledTexture.TileSizeWithBound;
+            var tempNormalRT = RenderTexture.GetTemporary(
+                albedoTileRT.width,
+                albedoTileRT.height,
+                0,
+                GraphicsFormat.R8G8B8A8_UNorm);
+
+            Graphics.Blit(normalTileRT, tempNormalRT, flipMaterial);
+            Graphics.CopyTexture(
+                tempNormalRT, 0, 0, 0, 0, normalTileRT.width, normalTileRT.height,
+                _tiledTexture.VTRTs[1], 0, 0,
+                tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
+
+            RenderTexture.ReleaseTemporary(tempNormalRT);
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            var tempRT = RenderTexture.GetTemporary(
+                albedoTileRT.width,
+                albedoTileRT.height,
+                0,
+                GraphicsFormat.R8G8B8A8_UNorm);
+
+            // compress
+            Graphics.Blit(albedoTileRT, tempRT, flipMaterial);
+            var compressAlbedoTile = TextureCompressUtil.CompressRT2RT(_tiledTexture.compressShader, tempRT);
+            Graphics.Blit(normalTileRT, tempRT, flipMaterial);
+            var compressNormalTile = TextureCompressUtil.CompressRT2RT(_tiledTexture.compressShader, tempRT);
 
             Graphics.CopyTexture(
                 compressAlbedoTile, 0, 0, 0, 0, compressAlbedoTile.width, compressAlbedoTile.height,
                 _tiledTexture.VTs[0], 0, 0,
                 tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
 
-            Graphics.CopyTexture(
-                compressNormalTile, 0, 0, 0, 0, compressNormalTile.width, compressNormalTile.height,
-                _tiledTexture.VTs[1], 0, 0,
-                tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
+            // Graphics.CopyTexture(
+            //     compressNormalTile, 0, 0, 0, 0, compressNormalTile.width, compressNormalTile.height,
+            //     _tiledTexture.VTs[1], 0, 0,
+            //     tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
 
             compressAlbedoTile.Release();
             compressNormalTile.Release();
+            RenderTexture.ReleaseTemporary(tempRT);
         }
         else
         {
-            // var tileX = drawPos.xMin / _tiledTexture.TileSizeWithBound;
-            // var tileY = drawPos.yMin / _tiledTexture.TileSizeWithBound;
+            var tempRT = RenderTexture.GetTemporary(
+                albedoTileRT.width,
+                albedoTileRT.height,
+                0,
+                GraphicsFormat.R8G8B8A8_UNorm);
+
+            Graphics.Blit(albedoTileRT, tempRT, flipMaterial);
+            Graphics.CopyTexture(
+                tempRT, 0, 0, 0, 0, albedoTileRT.width, albedoTileRT.height,
+                _tiledTexture.VTRTs[0], 0, 0,
+                tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
+
+            Graphics.Blit(normalTileRT, tempRT, flipMaterial);
+            Graphics.CopyTexture(
+                tempRT, 0, 0, 0, 0, normalTileRT.width, normalTileRT.height,
+                _tiledTexture.VTRTs[1], 0, 0,
+                tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
+
+            RenderTexture.ReleaseTemporary(tempRT);
+
+            // Graphics.SetRenderTarget(_VTTileBuffer, _VTDepthBuffer);
+            // Shader.SetGlobalTexture(TileAlbedo, albedoTileRT);
+            // Shader.SetGlobalTexture(TileNormal, normalTileRT);
             //
-            // Graphics.CopyTexture(
-            //     albedoTileRT, 0, 0, 0, 0, albedoTileRT.width, albedoTileRT.height,
-            //     _tiledTexture.VTRTs[0], 0, 0,
-            //     tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
+            // var mvpMatrix = Util.GetTileMatrix(posRect, _tiledTextureSize);
+            // drawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"), GL.GetGPUProjectionMatrix(mvpMatrix, true));
             //
-            // Graphics.CopyTexture(
-            //     normalTileRT, 0, 0, 0, 0, normalTileRT.width, normalTileRT.height,
-            //     _tiledTexture.VTRTs[1], 0, 0,
-            //     tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
-
-            Graphics.SetRenderTarget(_VTTileBuffer, _VTDepthBuffer);
-
-            Shader.SetGlobalTexture(TileAlbedo, albedoTileRT);
-            Shader.SetGlobalTexture(TileNormal, normalTileRT);
-
-            var mvpMatrix = Util.GetTileMatrix(posRect, _tiledTextureSize);
-            drawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"), GL.GetGPUProjectionMatrix(mvpMatrix, true));
-
-            drawTextureMaterial.SetPass(3);
-            Graphics.DrawMeshNow(_quadMesh, Matrix4x4.identity);
+            // drawTextureMaterial.SetPass(3);
+            // Graphics.DrawMeshNow(_quadMesh, Matrix4x4.identity);
         }
 
         #endregion

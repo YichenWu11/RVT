@@ -345,9 +345,6 @@ half4 ComputeRVTColor(Varyings IN)
     uv = (page.rg * (_VTTileParam.y + _VTTileParam.x * 2) /* 定位到 Tile */
         + inner_offset * _VTTileParam.y + _VTTileParam.x) / _VTTileParam.zw;
 
-    // const half3 albedo = tex2D(_VTDiffuse, uv);
-    // const half3 normalTS = UnpackNormalScale(tex2D(_VTNormal, uv), 1);
-    // float2(uv.x, 1.0f - uv.y
     const half3 albedo = tex2D(_VTDiffuse, uv);
     const half3 normalTS = UnpackNormalScale(tex2D(_VTNormal, uv), 1);
 

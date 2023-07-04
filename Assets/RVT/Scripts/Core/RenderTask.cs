@@ -23,7 +23,7 @@ public class RenderRequest
 public class RenderTask
 {
     // 每帧处理数量限制
-    private readonly int _limit = 4;
+    private readonly int _limit = 10;
 
     // 等待处理的请求
     private readonly List<RenderRequest> _pendingRequests = new();
@@ -36,7 +36,6 @@ public class RenderTask
         if (_pendingRequests.Count <= 0)
             return;
 
-        // 优先处理 mipmap 等级高的请求
         _pendingRequests.Sort((lhs, rhs) => -lhs.MipLevel.CompareTo(rhs.MipLevel));
 
         var count = _limit;

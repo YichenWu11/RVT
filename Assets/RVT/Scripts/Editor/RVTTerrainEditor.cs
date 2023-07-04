@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
+#if UNITY_EDITOR
 [CustomEditor(typeof(RVTTerrain))]
 public class RVTTerrainEditor : Editor
 {
@@ -10,8 +11,9 @@ public class RVTTerrainEditor : Editor
         {
             var rvt = (RVTTerrain)target;
 
-            // Util.DrawTexture(rvt.albedoTileRT, "AlbedoTile");
-            // Util.DrawTexture(rvt.normalTileRT, "NormalTile");
+            Util.DrawTexture(rvt.albedoTileRT, "AlbedoTile");
+            Util.DrawTexture(rvt.normalTileRT, "NormalTile");
+            // Util.DrawTexture(rvt.debugTex2D, "Debug");
 
             DrawDefaultInspector();
             serializedObject.ApplyModifiedProperties();
@@ -22,3 +24,4 @@ public class RVTTerrainEditor : Editor
         }
     }
 }
+#endif
