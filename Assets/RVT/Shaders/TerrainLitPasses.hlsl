@@ -325,10 +325,13 @@ void ComputeMasks(out half4 masks[4], half4 hasMask, Varyings IN)
     masks[3] += _MaskMapRemapOffset3.rgba;
 }
 
+sampler2D _DecalRT;
+
 half4 ComputeRVTColor(Varyings IN)
 {
     // _VTRegionRect.z : the totalWidth of Terrain Region
     float2 uv = (IN.positionWS.xz - _VTRegionRect.xy) / _VTRegionRect.z;
+    float4 decal_color = tex2D(_DecalRT, uv);
 
     // float4 ini_color = tex2D(_VTDiffuse, uv);
     // float2 pageUV = uv - frac(uv * _VTPageParam.x) * _VTPageParam.y;
@@ -358,6 +361,8 @@ half4 ComputeRVTColor(Varyings IN)
     half4 color = UniversalFragmentPBR(inputData, albedo, metallic, /* specular */ half3(0.0h, 0.0h, 0.0h), smoothness,
                                        occlusion, /* emission */ half3(0, 0, 0), /* alpha */ 1.0h);
     SplatmapFinalColor(color, inputData.fogCoord);
+
+    color.rgb += decal_color.rgb * decal_color.a;
 
     return half4(color.rgb, 1.0h);
     // return half4(page.rg / 255.0f, 0.0h, 1.0h);

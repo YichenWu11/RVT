@@ -463,6 +463,8 @@ MonoBehaviour:
   flipMaterial: {fileID: 2100000, guid: 93a2d634ed895df4eba978613cb99f3c, type: 2}
   albedoTileRT: {fileID: 0}
   normalTileRT: {fileID: 0}
+  decalRT: {fileID: 0}
+  alter: 1
 --- !u!114 &982010931
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -476,7 +478,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   regionSize: {x: 10, y: 10}
-  tileSize: 1024
+  tileSize: 512
   boundSize: 4
   VTs: []
   compressShader: {fileID: 7200000, guid: ff10271661913b84b98063ac34b9877a, type: 3}
@@ -615,7 +617,7 @@ MonoBehaviour:
     y: 0
     width: 1024
     height: 1024
-  EnableDecalRender: 0
+  EnableDecalRender: 1
 --- !u!1 &1042161576
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,6 +2,8 @@
 {
     Properties
     {
+    	_MainTex ("Texture", 2D) = "white" {}
+    	
 	    _Diffuse1("Diffuse1", 2D) = "white" {}
 		_Normal1("Normal1", 2D) = "white" {}
     	
@@ -33,7 +35,7 @@
             CGPROGRAM
 			#pragma target 3.5
 
-            #pragma vertex vert
+            #pragma vertex tileVert
             #pragma fragment frag
 
             #include "UnityCG.cginc"
@@ -48,7 +50,7 @@
             CGPROGRAM
 			#pragma target 3.5
 
-            #pragma vertex tileVert
+            #pragma vertex decalVert01
             #pragma fragment decalFrag
 
             #include "UnityCG.cginc"
@@ -58,22 +60,22 @@
     	
     	Pass
         {
-        	Tags { "LightMode" = "TileRenderer" }
+        	Tags { "LightMode" = "VTDecalRenderer" }
         	
             CGPROGRAM
 			#pragma target 3.5
 
-            #pragma vertex tileVert
-            #pragma fragment frag
+            #pragma vertex decalVert02
+            #pragma fragment decalFrag
 
             #include "UnityCG.cginc"
 			#include "VTDrawTexture.cginc"
             ENDCG
         }
     	
-    	Pass
+        Pass
         {
-        	Tags { "LightMode" = "CopyRenderer" }
+	        Tags { "LightMode" = "CopyRenderer" }
         	
             CGPROGRAM
 			#pragma target 3.5

@@ -13,7 +13,7 @@ public class RVTTerrainEditor : Editor
 
             Util.DrawTexture(rvt.albedoTileRT, "AlbedoTile");
             Util.DrawTexture(rvt.normalTileRT, "NormalTile");
-            // Util.DrawTexture(rvt.debugTex2D, "Debug");
+            Util.DrawTexture(rvt.decalRT, "DecalRT");
 
             DrawDefaultInspector();
             serializedObject.ApplyModifiedProperties();

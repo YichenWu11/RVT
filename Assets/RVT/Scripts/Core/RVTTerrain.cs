@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Drawing.Drawing2D;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
@@ -16,6 +17,7 @@ public class RVTTerrain : MonoBehaviour
     private static readonly int DecalOffset0 = Shader.PropertyToID("_DecalOffset0");
     private static readonly int TileAlbedo = Shader.PropertyToID("_TileAlbedo");
     private static readonly int TileNormal = Shader.PropertyToID("_TileNormal");
+    private static readonly int DecalRT = Shader.PropertyToID("_DecalRT");
 
     // RVT Settings
     [Header("RVT Settings")] public bool EnableRVTUpdate = true;
@@ -62,6 +64,16 @@ public class RVTTerrain : MonoBehaviour
     private RenderBuffer[] _tileBuffer;
     private RenderBuffer _depthBuffer;
 
+    [HideInInspector] public RenderTexture decalRT;
+
+    public enum AlterDecal
+    {
+        Alter1,
+        Alter2
+    }
+
+    public AlterDecal alter;
+
     private void Start()
     {
         _pageTable = GetComponent<PageTable>();
@@ -104,6 +116,18 @@ public class RVTTerrain : MonoBehaviour
         _depthBuffer = albedoTileRT.depthBuffer;
 
         _tiledTextureSize = new Vector2Int(_tiledTexture.VTRTs[0].width, _tiledTexture.VTRTs[0].height);
+
+        // decal
+        decalRT = new RenderTexture(_tiledTexture.TileSizeWithBound * 2, _tiledTexture.TileSizeWithBound * 2, 0)
+        {
+            filterMode = FilterMode.Bilinear,
+            graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
+            useMipMap = false,
+            wrapMode = TextureWrapMode.Clamp
+        };
+        decalRT.Create();
+        Shader.SetGlobalTexture(DecalRT, decalRT);
+        Graphics.Blit(null, decalRT, flipMaterial, 1);
     }
 
     private void Update()
@@ -214,17 +238,61 @@ public class RVTTerrain : MonoBehaviour
             drawTextureMaterial.SetTexture($"_Normal{layerIndex + 1}", layer.normalMapTexture);
         }
 
-        if (decalInfo != null)
-        {
-            var decalScale = Mathf.Pow(2, decalInfo.mipLevel);
-            Shader.SetGlobalVector(DecalOffset0, new Vector4(
-                decalScale, decalScale, decalInfo.innerOffset.x, decalInfo.innerOffset.x
-            ));
-        }
-
         // active pass 0 or 1 of material
-        drawTextureMaterial.SetPass(decal ? 1 : 2);
+        drawTextureMaterial.SetPass(0);
         Graphics.DrawMeshNow(_fullScreenQuadMesh, Matrix4x4.identity);
+
+        // render decal to albedoTile
+        if (decal)
+        {
+            if (decalInfo != null)
+            {
+                var decalScale = Mathf.Pow(2, decalInfo.mipLevel);
+                Shader.SetGlobalVector(DecalOffset0, new Vector4(
+                    decalScale, decalScale, decalInfo.innerOffset.x, decalInfo.innerOffset.x
+                ));
+            }
+
+            switch (alter)
+            {
+                case AlterDecal.Alter1:
+                    var tempAlbedoRT = RenderTexture.GetTemporary(
+                        albedoTileRT.width,
+                        albedoTileRT.height,
+                        0,
+                        GraphicsFormat.R8G8B8A8_UNorm);
+                    Graphics.Blit(albedoTileRT, tempAlbedoRT);
+                    Graphics.Blit(tempAlbedoRT, albedoTileRT, drawTextureMaterial, 1);
+                    RenderTexture.ReleaseTemporary(tempAlbedoRT);
+                    break;
+                case AlterDecal.Alter2:
+                    var tempDecalRT = RenderTexture.GetTemporary(
+                        decalRT.width,
+                        decalRT.height,
+                        0,
+                        GraphicsFormat.R8G8B8A8_UNorm);
+
+                    var tti = decalInfo.terrainTileIndex;
+                    var decalRect = new Rect(
+                        tti.x * regionRect.width / _pageTable.TableSize,
+                        tti.y * regionRect.height / _pageTable.TableSize,
+                        regionRect.width / _pageTable.TableSize,
+                        regionRect.height / _pageTable.TableSize);
+
+                    Graphics.SetRenderTarget(decalRT.colorBuffer, decalRT.depthBuffer);
+                    var mvpMatrix = Util.GetTileMatrix(decalRect, new Vector2Int(1024, 1024));
+                    drawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"),
+                        GL.GetGPUProjectionMatrix(mvpMatrix, true));
+                    Graphics.Blit(decalRT, tempDecalRT);
+                    Graphics.Blit(tempDecalRT, decalRT, drawTextureMaterial, 2);
+                    RenderTexture.ReleaseTemporary(tempDecalRT);
+                    drawTextureMaterial.SetPass(1);
+                    Graphics.DrawMeshNow(_quadMesh, Matrix4x4.identity);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
         #endregion
 
@@ -246,7 +314,7 @@ public class RVTTerrain : MonoBehaviour
                 0,
                 GraphicsFormat.R8G8B8A8_UNorm);
 
-            Graphics.Blit(normalTileRT, tempNormalRT, flipMaterial);
+            Graphics.Blit(normalTileRT, tempNormalRT, flipMaterial, 0);
             Graphics.CopyTexture(
                 tempNormalRT, 0, 0, 0, 0, normalTileRT.width, normalTileRT.height,
                 _tiledTexture.VTRTs[1], 0, 0,
@@ -262,7 +330,7 @@ public class RVTTerrain : MonoBehaviour
                 0,
                 GraphicsFormat.R8G8B8A8_UNorm);
 
-            Graphics.Blit(albedoTileRT, tempRT, flipMaterial);
+            Graphics.Blit(albedoTileRT, tempRT, flipMaterial, 0);
             var compressAlbedoTile = TextureCompressUtil.CompressRT2RT(_tiledTexture.compressShader, tempRT);
             Graphics.CopyTexture(
                 compressAlbedoTile, 0, 0, 0, 0, compressAlbedoTile.width, compressAlbedoTile.height,
@@ -270,7 +338,7 @@ public class RVTTerrain : MonoBehaviour
                 tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
 
             tempRT.DiscardContents();
-            Graphics.Blit(normalTileRT, tempRT, flipMaterial);
+            Graphics.Blit(normalTileRT, tempRT, flipMaterial, 0);
             var compressNormalTile = TextureCompressUtil.CompressRT2RT(_tiledTexture.compressShader, tempRT);
             // Graphics.CopyTexture(
             //     compressNormalTile, 0, 0, 0, 0, compressNormalTile.width, compressNormalTile.height,
@@ -289,29 +357,19 @@ public class RVTTerrain : MonoBehaviour
                 0,
                 GraphicsFormat.R8G8B8A8_UNorm);
 
-            Graphics.Blit(albedoTileRT, tempRT, flipMaterial);
+            Graphics.Blit(albedoTileRT, tempRT, flipMaterial, 0);
             Graphics.CopyTexture(
                 tempRT, 0, 0, 0, 0, albedoTileRT.width, albedoTileRT.height,
                 _tiledTexture.VTRTs[0], 0, 0,
                 tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
 
-            Graphics.Blit(normalTileRT, tempRT, flipMaterial);
+            Graphics.Blit(normalTileRT, tempRT, flipMaterial, 0);
             Graphics.CopyTexture(
                 tempRT, 0, 0, 0, 0, normalTileRT.width, normalTileRT.height,
                 _tiledTexture.VTRTs[1], 0, 0,
                 tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
 
             RenderTexture.ReleaseTemporary(tempRT);
-
-            // Graphics.SetRenderTarget(_VTTileBuffer, _VTDepthBuffer);
-            // Shader.SetGlobalTexture(TileAlbedo, albedoTileRT);
-            // Shader.SetGlobalTexture(TileNormal, normalTileRT);
-            //
-            // var mvpMatrix = Util.GetTileMatrix(posRect, _tiledTextureSize);
-            // drawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"), GL.GetGPUProjectionMatrix(mvpMatrix, true));
-            //
-            // drawTextureMaterial.SetPass(3);
-            // Graphics.DrawMeshNow(_quadMesh, Matrix4x4.identity);
         }
 
         #endregion
