@@ -58,8 +58,7 @@ v2f_drawTex vert(appdata_img v)
 
 pixel_output frag(v2f_drawTex i) : SV_Target
 {
-    // float4 blend = tex2D(_Blend, i.uv * _BlendTile.xy + _BlendTile.zw);
-    float4 blend = tex2Dlod(_Blend, float4(i.uv * _BlendTile.xy + _BlendTile.zw, 0, 0));
+    float4 blend = tex2D(_Blend, i.uv * _BlendTile.xy + _BlendTile.zw);
 
     int mip_level = 0;
     float2 transUv = i.uv * _TileOffset1.xy + _TileOffset1.zw;

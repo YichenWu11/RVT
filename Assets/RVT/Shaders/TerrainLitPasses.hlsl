@@ -480,6 +480,7 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
     SplatmapFinalColor(color, inputData.fogCoord);
 
     return half4(color.rgb, 1.0h);
+    // return half4(IN.uvSplat01.zw / 255.h, 0.0h, 1.0h);
     // return half4(splatControl.rgb, 1.0h);
     // return half4(page / 255.0, 0.0h, 1.0h);
     #endif

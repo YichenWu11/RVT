@@ -53,7 +53,8 @@ public class TiledTexture : MonoBehaviour
             graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp,
-            name = "AlbedoVT"
+            name = "AlbedoVT",
+            filterMode = FilterMode.Bilinear
         };
 
         VTRTs[1] = new RenderTexture(RegionSize.x * TileSizeWithBound, RegionSize.y * TileSizeWithBound, 0)
@@ -61,24 +62,27 @@ public class TiledTexture : MonoBehaviour
             graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp,
-            name = "NormalVT"
+            name = "NormalVT",
+            filterMode = FilterMode.Bilinear
         };
 
         VTs = new Texture2D[2];
         VTs[0] = new Texture2D(
             RegionSize.x * TileSizeWithBound,
             RegionSize.y * TileSizeWithBound,
-            GraphicsFormat.RGBA_DXT5_UNorm, TextureCreationFlags.None)
+            TextureFormat.DXT5, false, true)
         {
-            name = "CompressedAlbedoVT"
+            name = "CompressedAlbedoVT",
+            filterMode = FilterMode.Bilinear
         };
 
         VTs[1] = new Texture2D(
             RegionSize.x * TileSizeWithBound,
             RegionSize.y * TileSizeWithBound,
-            GraphicsFormat.RGBA_DXT5_UNorm, TextureCreationFlags.None)
+            TextureFormat.DXT5, false, true)
         {
-            name = "CompressedNormalVT"
+            name = "CompressedNormalVT",
+            filterMode = FilterMode.Bilinear
         };
 
         if (GetComponent<RVTTerrain>().EnableVTCompression)
@@ -93,8 +97,8 @@ public class TiledTexture : MonoBehaviour
             Shader.SetGlobalTexture(VTNormal, VTRTs[1]);
         }
 
-        VTs[0].Apply(true, true);
-        VTs[1].Apply(true, true);
+        VTs[0].Apply(false, true);
+        VTs[1].Apply(false, true);
 
         // x: padding偏移量
         // y: tile有效区域的尺寸
@@ -134,11 +138,6 @@ public class TiledTexture : MonoBehaviour
                 TileSizeWithBound),
             request);
         OnTileUpdateComplete?.Invoke(tile);
-    }
-
-    public void CompressBC3()
-    {
-        throw new NotImplementedException();
     }
 
     public void Reset()

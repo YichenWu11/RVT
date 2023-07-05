@@ -254,7 +254,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be76e5f14cfee674cb30b491fb72b09b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boost: 6
+  boost: 5
   positionLerpTime: 0.2
   mouseSensitivity: 60
   mouseSensitivityCurve:
@@ -476,7 +476,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   regionSize: {x: 10, y: 10}
-  tileSize: 512
+  tileSize: 1024
   boundSize: 4
   VTs: []
   compressShader: {fileID: 7200000, guid: ff10271661913b84b98063ac34b9877a, type: 3}

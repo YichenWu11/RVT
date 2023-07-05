@@ -56,10 +56,6 @@ public class RVTTerrain : MonoBehaviour
     // 页表
     private PageTable _pageTable;
 
-    // From TiledTexture
-    private RenderBuffer[] _VTTileBuffer;
-    private RenderBuffer _VTDepthBuffer;
-
     // Tile
     [HideInInspector] public RenderTexture albedoTileRT;
     [HideInInspector] public RenderTexture normalTileRT;
@@ -87,6 +83,7 @@ public class RVTTerrain : MonoBehaviour
 
         albedoTileRT = new RenderTexture(_tiledTexture.TileSizeWithBound, _tiledTexture.TileSizeWithBound, 0)
         {
+            filterMode = FilterMode.Bilinear,
             graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp
@@ -94,6 +91,7 @@ public class RVTTerrain : MonoBehaviour
         albedoTileRT.Create();
         normalTileRT = new RenderTexture(_tiledTexture.TileSizeWithBound, _tiledTexture.TileSizeWithBound, 0)
         {
+            filterMode = FilterMode.Bilinear,
             graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
             useMipMap = false,
             wrapMode = TextureWrapMode.Clamp
@@ -105,10 +103,6 @@ public class RVTTerrain : MonoBehaviour
         _tileBuffer[1] = normalTileRT.colorBuffer;
         _depthBuffer = albedoTileRT.depthBuffer;
 
-        _VTTileBuffer = new RenderBuffer[2];
-        _VTTileBuffer[0] = _tiledTexture.VTRTs[0].colorBuffer;
-        _VTTileBuffer[1] = _tiledTexture.VTRTs[1].colorBuffer;
-        _VTDepthBuffer = _tiledTexture.VTRTs[0].depthBuffer;
         _tiledTextureSize = new Vector2Int(_tiledTexture.VTRTs[0].width, _tiledTexture.VTRTs[0].height);
     }
 
@@ -268,17 +262,16 @@ public class RVTTerrain : MonoBehaviour
                 0,
                 GraphicsFormat.R8G8B8A8_UNorm);
 
-            // compress
             Graphics.Blit(albedoTileRT, tempRT, flipMaterial);
             var compressAlbedoTile = TextureCompressUtil.CompressRT2RT(_tiledTexture.compressShader, tempRT);
-            Graphics.Blit(normalTileRT, tempRT, flipMaterial);
-            var compressNormalTile = TextureCompressUtil.CompressRT2RT(_tiledTexture.compressShader, tempRT);
-
             Graphics.CopyTexture(
                 compressAlbedoTile, 0, 0, 0, 0, compressAlbedoTile.width, compressAlbedoTile.height,
                 _tiledTexture.VTs[0], 0, 0,
                 tileX * _tiledTexture.TileSizeWithBound, tileY * _tiledTexture.TileSizeWithBound);
 
+            tempRT.DiscardContents();
+            Graphics.Blit(normalTileRT, tempRT, flipMaterial);
+            var compressNormalTile = TextureCompressUtil.CompressRT2RT(_tiledTexture.compressShader, tempRT);
             // Graphics.CopyTexture(
             //     compressNormalTile, 0, 0, 0, 0, compressNormalTile.width, compressNormalTile.height,
             //     _tiledTexture.VTs[1], 0, 0,
@@ -327,10 +320,10 @@ public class RVTTerrain : MonoBehaviour
     public void ResetVT()
     {
         _tiledTexture.Reset();
-        _VTTileBuffer = new RenderBuffer[2];
-        _VTTileBuffer[0] = _tiledTexture.VTRTs[0].colorBuffer;
-        _VTTileBuffer[1] = _tiledTexture.VTRTs[1].colorBuffer;
-        _VTDepthBuffer = _tiledTexture.VTRTs[0].depthBuffer;
+        _tileBuffer = new RenderBuffer[2];
+        _tileBuffer[0] = albedoTileRT.colorBuffer;
+        _tileBuffer[1] = normalTileRT.colorBuffer;
+        _depthBuffer = albedoTileRT.depthBuffer;
         _tiledTextureSize = new Vector2Int(_tiledTexture.VTRTs[0].width, _tiledTexture.VTRTs[0].height);
         _pageTable.Reset();
     }
