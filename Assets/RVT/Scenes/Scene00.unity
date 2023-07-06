@@ -464,7 +464,7 @@ MonoBehaviour:
   albedoTileRT: {fileID: 0}
   normalTileRT: {fileID: 0}
   decalRT: {fileID: 0}
-  alter: 0
+  alter: 1
 --- !u!114 &982010931
 MonoBehaviour:
   m_ObjectHideFlags: 0
