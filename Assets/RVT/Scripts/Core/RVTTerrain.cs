@@ -69,7 +69,8 @@ public class RVTTerrain : MonoBehaviour
     public enum AlterDecal
     {
         Alter1,
-        Alter2
+        Alter2,
+        Alter3
     }
 
     public AlterDecal alter;
@@ -118,7 +119,7 @@ public class RVTTerrain : MonoBehaviour
         _tiledTextureSize = new Vector2Int(_tiledTexture.VTRTs[0].width, _tiledTexture.VTRTs[0].height);
 
         // decal
-        decalRT = new RenderTexture(_tiledTexture.TileSizeWithBound * 2, _tiledTexture.TileSizeWithBound * 2, 0)
+        decalRT = new RenderTexture(_tiledTexture.TileSizeWithBound * 4, _tiledTexture.TileSizeWithBound * 4, 0)
         {
             filterMode = FilterMode.Bilinear,
             graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm,
@@ -127,7 +128,7 @@ public class RVTTerrain : MonoBehaviour
         };
         decalRT.Create();
         Shader.SetGlobalTexture(DecalRT, decalRT);
-        Graphics.Blit(null, decalRT, flipMaterial, 1);
+        // Graphics.Blit(null, decalRT, flipMaterial, 1);
     }
 
     private void Update()
@@ -179,16 +180,15 @@ public class RVTTerrain : MonoBehaviour
         x -= x % perCellSize;
         y -= y % perCellSize;
 
-        var boundOffset =
+        var borderOffset =
             (float)_tiledTexture.BoundSize / _tiledTexture.TileSize * perCellSize *
             (regionRect.width / _pageTable.TableSize);
 
         var realRect = new Rect(
-            regionRect.xMin + (float)x / _pageTable.TableSize * regionRect.width - boundOffset,
-            regionRect.yMin + (float)y / _pageTable.TableSize * regionRect.height - boundOffset,
-            regionRect.width / _pageTable.TableSize * perCellSize + 2.0f * boundOffset,
-            regionRect.width / _pageTable.TableSize * perCellSize + 2.0f * boundOffset);
-
+            regionRect.xMin + (float)x / _pageTable.TableSize * regionRect.width - borderOffset,
+            regionRect.yMin + (float)y / _pageTable.TableSize * regionRect.height - borderOffset,
+            regionRect.width / _pageTable.TableSize * perCellSize + 2.0f * borderOffset,
+            regionRect.width / _pageTable.TableSize * perCellSize + 2.0f * borderOffset);
 
         var terrainRect = Rect.zero;
         terrainRect.xMin = terrain.transform.position.x;
@@ -243,19 +243,18 @@ public class RVTTerrain : MonoBehaviour
         Graphics.DrawMeshNow(_fullScreenQuadMesh, Matrix4x4.identity);
 
         // render decal to albedoTile
-        if (decal)
+        if (decal && decalInfo != null)
         {
-            if (decalInfo != null)
-            {
-                var decalScale = Mathf.Pow(2, decalInfo.mipLevel);
-                Shader.SetGlobalVector(DecalOffset0, new Vector4(
-                    decalScale, decalScale, decalInfo.innerOffset.x, decalInfo.innerOffset.x
-                ));
-            }
+            var decalScale = Mathf.Pow(2, decalInfo.mipLevel);
+            Shader.SetGlobalVector(DecalOffset0, new Vector4(
+                decalScale, decalScale, decalInfo.innerOffset.x, decalInfo.innerOffset.x
+            ));
+
 
             switch (alter)
             {
                 case AlterDecal.Alter1:
+                {
                     var tempAlbedoRT = RenderTexture.GetTemporary(
                         albedoTileRT.width,
                         albedoTileRT.height,
@@ -264,8 +263,10 @@ public class RVTTerrain : MonoBehaviour
                     Graphics.Blit(albedoTileRT, tempAlbedoRT);
                     Graphics.Blit(tempAlbedoRT, albedoTileRT, drawTextureMaterial, 1);
                     RenderTexture.ReleaseTemporary(tempAlbedoRT);
+                }
                     break;
                 case AlterDecal.Alter2:
+                {
                     var tempDecalRT = RenderTexture.GetTemporary(
                         decalRT.width,
                         decalRT.height,
@@ -279,15 +280,32 @@ public class RVTTerrain : MonoBehaviour
                         regionRect.width / _pageTable.TableSize,
                         regionRect.height / _pageTable.TableSize);
 
+                    var mvpMatrix = Util.GetTileMatrix(decalRect, new Vector2Int(1024, 1024));
+                    drawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"),
+                        GL.GetGPUProjectionMatrix(mvpMatrix, true));
+
+                    Graphics.Blit(decalRT, tempDecalRT);
+                    Graphics.Blit(tempDecalRT, decalRT, drawTextureMaterial, 3);
+                    RenderTexture.ReleaseTemporary(tempDecalRT);
+                }
+                    break;
+                case AlterDecal.Alter3:
+                {
+                    var tti = decalInfo.terrainTileIndexFloat;
+                    var decalRect = new Rect(
+                        tti.x * regionRect.width / _pageTable.TableSize,
+                        tti.y * regionRect.height / _pageTable.TableSize,
+                        regionRect.width / _pageTable.TableSize,
+                        regionRect.height / _pageTable.TableSize);
+
                     Graphics.SetRenderTarget(decalRT.colorBuffer, decalRT.depthBuffer);
                     var mvpMatrix = Util.GetTileMatrix(decalRect, new Vector2Int(1024, 1024));
                     drawTextureMaterial.SetMatrix(Shader.PropertyToID("_ImageMVP"),
                         GL.GetGPUProjectionMatrix(mvpMatrix, true));
-                    Graphics.Blit(decalRT, tempDecalRT);
-                    Graphics.Blit(tempDecalRT, decalRT, drawTextureMaterial, 2);
-                    RenderTexture.ReleaseTemporary(tempDecalRT);
-                    drawTextureMaterial.SetPass(1);
+
+                    drawTextureMaterial.SetPass(3);
                     Graphics.DrawMeshNow(_quadMesh, Matrix4x4.identity);
+                }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -88,7 +88,6 @@ public class TiledTexture : MonoBehaviour
         if (GetComponent<RVTTerrain>().EnableVTCompression)
         {
             Shader.SetGlobalTexture(VTDiffuse, VTs[0]);
-            // Shader.SetGlobalTexture(VTNormal, VTs[1]);
             Shader.SetGlobalTexture(VTNormal, VTRTs[1]);
         }
         else

@@ -11,9 +11,9 @@ public class TileTextureEditor : Editor
         {
             var tileTexture = (TiledTexture)target;
 
-            Util.DrawTexture(tileTexture.VTRTs[0], "Diffuse");
+            // Util.DrawTexture(tileTexture.VTRTs[0], "Diffuse");
             Util.DrawTexture(tileTexture.VTRTs[1], "Normal");
-            Util.DrawTexture(tileTexture.VTs[1], "CompressedNormal");
+            // Util.DrawTexture(tileTexture.VTs[1], "CompressedNormal");
             Util.DrawTexture(tileTexture.VTs[0], "CompressedDiffuse");
         }
         else

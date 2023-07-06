@@ -49,6 +49,8 @@ struct v2f_drawTex
     float2 uv : TEXCOORD0;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
 v2f_drawTex vert(appdata_img v)
 {
     v2f_drawTex o;
@@ -85,39 +87,43 @@ pixel_output frag(v2f_drawTex i) : SV_Target
     return o;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 v2f_drawTex decalVert01(appdata_img v)
 {
     v2f_drawTex o;
     o.pos = UnityObjectToClipPos(v.vertex);
     o.uv = v.texcoord;
-    // o.pos = mul(_ImageMVP, v.vertex);
-    // o.uv = v.texcoord;
     return o;
 }
 
-v2f_drawTex decalVert02(appdata_img v)
-{
-    v2f_drawTex o;
-    // o.pos = UnityObjectToClipPos(v.vertex);
-    // o.uv = v.texcoord;
-    o.pos = mul(_ImageMVP, v.vertex);
-    o.uv = v.texcoord;
-    return o;
-}
-
-// Decal
-fixed4 decalFrag(v2f_drawTex i) : SV_Target
+fixed4 decalFrag01(v2f_drawTex i) : SV_Target
 {
     float2 decalUV = i.uv * _DecalOffset0.xy + _DecalOffset0.zw;
     float4 decal0 = tex2D(_Decal0, i.uv);
 
     float4 color = tex2D(_MainTex, i.uv);
-    // if (color.a > 0.9f)
-    // color = float4(1, 0, 0, 0.1);
-    color.rgb += decal0.rgb * decal0.a;
-    // color.a = decal0.a;
+    color.rgb = color.rgb * (1 - decal0.a) + decal0.rgb * decal0.a;
     return color;
 }
+
+v2f_drawTex decalVert02(appdata_img v)
+{
+    v2f_drawTex o;
+    o.pos = mul(_ImageMVP, v.vertex);
+    o.uv = v.texcoord;
+    return o;
+}
+
+fixed4 decalFrag02(v2f_drawTex i) : SV_Target
+{
+    float2 decalUV = i.uv * _DecalOffset0.xy + _DecalOffset0.zw;
+    float4 decal0 = tex2D(_Decal0, i.uv);
+    clip(decal0.a < 0.1f);
+    return decal0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 // Copy Tile To VT
 v2f_drawTex tileVert(appdata_img v)

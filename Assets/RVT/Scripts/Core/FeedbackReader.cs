@@ -13,7 +13,7 @@ public class FeedbackReader : MonoBehaviour
     [SerializeField] private Material downScaleMaterial;
 
     // 回读目标缩放比例
-    private readonly ScaleFactor readbackScale = ScaleFactor.Quarter;
+    private readonly ScaleFactor readbackScale = ScaleFactor.Half;
 
     // 缩小后的 RT
     private RenderTexture _downScaleTexture;

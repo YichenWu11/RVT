@@ -9,6 +9,7 @@ public class DecalRenderer : MonoBehaviour
     {
         public Vector2Int tileIndex; // tile 坐标
         public Vector2Int terrainTileIndex; // terrain tile 坐标
+        public Vector2 terrainTileIndexFloat;
         public Vector2 innerOffset; // tile 内部偏移
         public int mipLevel;
     }
@@ -73,11 +74,15 @@ public class DecalRenderer : MonoBehaviour
         _lutInfo = _pageTable._lookupTexture.GetPixel(
             Mathf.FloorToInt(uv.x * _pageTable._lookupTexture.width),
             Mathf.FloorToInt(uv.y * _pageTable._lookupTexture.height));
+
         // Debug.Log(
         // $"uv : ({Mathf.FloorToInt(uv.x * _pageTable._lookupTexture.width)}, {Mathf.FloorToInt(uv.y * _pageTable._lookupTexture.height)})");
 
         // Debug.Log(
         // $"lut info : ({Mathf.FloorToInt(_lutInfo.r * 255.0f)},{Mathf.FloorToInt(_lutInfo.g * 255.0f)},{Mathf.FloorToInt(_lutInfo.b * 255.0f)})");
+
+        // Debug.Log(
+        //     $"index info : ({uv.x * _pageTable._lookupTexture.width},{uv.y * _pageTable._lookupTexture.height})");
 
         return new DecalInfo()
         {
@@ -87,9 +92,9 @@ public class DecalRenderer : MonoBehaviour
             terrainTileIndex = new Vector2Int(
                 Mathf.FloorToInt(uv.x * _pageTable._lookupTexture.width),
                 Mathf.FloorToInt(uv.y * _pageTable._lookupTexture.height)),
-            // terrainTileIndex = new Vector2(
-            //     uv.x * _pageTable._lookupTexture.width,
-            //     uv.y * _pageTable._lookupTexture.height),
+            terrainTileIndexFloat = new Vector2(
+                uv.x * _pageTable._lookupTexture.width - 0.5f,
+                uv.y * _pageTable._lookupTexture.height - 0.5f),
             innerOffset = new Vector2(
                 Util.Frac(uv.x * _pageTable.TableSize),
                 Util.Frac(uv.y * _pageTable.TableSize)),

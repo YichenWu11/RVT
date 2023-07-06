@@ -362,7 +362,7 @@ half4 ComputeRVTColor(Varyings IN)
                                        occlusion, /* emission */ half3(0, 0, 0), /* alpha */ 1.0h);
     SplatmapFinalColor(color, inputData.fogCoord);
 
-    color.rgb += decal_color.rgb * decal_color.a;
+    color.rgb = color.rgb * (1 - decal_color.a) + decal_color.rgb * decal_color.a;
 
     return half4(color.rgb, 1.0h);
     // return half4(page.rg / 255.0f, 0.0h, 1.0h);

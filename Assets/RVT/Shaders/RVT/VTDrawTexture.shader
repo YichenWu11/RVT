@@ -30,6 +30,8 @@
     SubShader
     {
         Cull Off ZWrite Off ZTest Always
+    	
+    	// 0
         Pass
         {
             CGPROGRAM
@@ -43,6 +45,7 @@
             ENDCG
         }
     	
+    	// 1
     	Pass
         {
         	Tags { "LightMode" = "VTDecalRenderer" }
@@ -51,13 +54,14 @@
 			#pragma target 3.5
 
             #pragma vertex decalVert01
-            #pragma fragment decalFrag
+            #pragma fragment decalFrag01
 
             #include "UnityCG.cginc"
 			#include "VTDrawTexture.cginc"
             ENDCG
         }
     	
+    	// 2
     	Pass
         {
         	Tags { "LightMode" = "VTDecalRenderer" }
@@ -66,18 +70,36 @@
 			#pragma target 3.5
 
             #pragma vertex decalVert02
-            #pragma fragment decalFrag
+            #pragma fragment decalFrag01
 
             #include "UnityCG.cginc"
 			#include "VTDrawTexture.cginc"
             ENDCG
         }
     	
+    	// 3
+    	Pass
+        {
+        	Tags { "LightMode" = "VTDecalRenderer" }
+        	Blend SrcAlpha OneMinusSrcAlpha
+        	
+            CGPROGRAM
+			#pragma target 3.5
+
+            #pragma vertex decalVert02
+            #pragma fragment decalFrag02
+
+            #include "UnityCG.cginc"
+			#include "VTDrawTexture.cginc"
+            ENDCG
+        }
+    	
+    	// 4
         Pass
         {
 	        Tags { "LightMode" = "CopyRenderer" }
         	
-            CGPROGRAM
+	        CGPROGRAM
 			#pragma target 3.5
 
             #pragma vertex vert

@@ -8,7 +8,7 @@ public class FeedbackRenderer : MonoBehaviour
     private int mipmapBias = 0;
 
     // Feedback RT 缩放
-    private readonly float _scaleFactor = 1.0f / 8.0f;
+    private readonly float _scaleFactor = 1.0f / 32.0f;
 
     public Camera FeedbackCamera { get; private set; }
 

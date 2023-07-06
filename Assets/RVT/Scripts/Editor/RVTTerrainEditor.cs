@@ -11,8 +11,8 @@ public class RVTTerrainEditor : Editor
         {
             var rvt = (RVTTerrain)target;
 
-            Util.DrawTexture(rvt.albedoTileRT, "AlbedoTile");
-            Util.DrawTexture(rvt.normalTileRT, "NormalTile");
+            // Util.DrawTexture(rvt.albedoTileRT, "AlbedoTile");
+            // Util.DrawTexture(rvt.normalTileRT, "NormalTile");
             Util.DrawTexture(rvt.decalRT, "DecalRT");
 
             DrawDefaultInspector();
